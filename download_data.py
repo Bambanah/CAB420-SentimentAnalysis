@@ -1,11 +1,10 @@
 from __future__ import print_function
 import pickle
 import os.path
+import io
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
-
-import io
 from apiclient.http import MediaIoBaseDownload
 
 # If modifying these scopes, delete the file token.pickle.
@@ -36,19 +35,8 @@ def main():
         with open('token.pickle', 'wb') as token:
             pickle.dump(creds, token)
 
+    # Initialise service
     service = build('drive', 'v3', credentials=creds)
-
-    # Call the Drive v3 API
-    results = service.files().list(
-        pageSize=10, fields="nextPageToken, files(id, name)").execute()
-    items = results.get('files', [])
-
-    if not items:
-        print('No files found.')
-    else:
-        print('Files:')
-        for item in items:
-            print(u'{0} ({1})'.format(item['name'], item['id']))
 
     page_token = None
     file_list = []
@@ -67,9 +55,14 @@ def main():
 
     # Create data directory if it doesn't exist
     if not os.path.isdir('data/'):
+        print("Data folder not found. Creating...\n")
         os.makedirs('data/')
 
     for file in file_list:
+
+        print("\rDownloading {}: 0%".format(
+            file['name']), end="")
+
         # Download file
         request = service.files().get_media(fileId=file['id'])
         fh = io.BytesIO()
@@ -77,7 +70,10 @@ def main():
         done = False
         while done is False:
             status, done = downloader.next_chunk()
-            print("Download %d%%." % int(status.progress() * 100))
+            print("\rDownloading {}: {}%".format(
+                file['name'], int(status.progress() * 100)), end="")
+
+        print("")
 
         # Write byte stream to file
         if not os.path.exists('data/{}'.format(file['name'])):
@@ -86,6 +82,8 @@ def main():
 
         with open('data/{}'.format(file['name']), 'w+b') as f:
             f.write(fh.getvalue())
+
+        print("{} saved to data folder.\n")
 
 
 if __name__ == '__main__':
