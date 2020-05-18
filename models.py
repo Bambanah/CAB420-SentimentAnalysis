@@ -1,12 +1,9 @@
-# Disable tensorflow debugging information
-
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Dropout, Activation
+from tensorflow.keras.layers import Dense, Dropout
 from tensorflow.keras.layers import Embedding
-from tensorflow.keras.layers import LSTM, GRU
+from tensorflow.keras.layers import LSTM
 from tensorflow.keras.layers import Conv1D, MaxPooling1D
-
 
 
 def lstm(vocab_size,
