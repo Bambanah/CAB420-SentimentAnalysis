@@ -75,40 +75,48 @@ def run_lstm_model(x_train, y_train, x_test, y_test,
 if __name__ == "__main__":
 
     model_LSTM = True
+    train_140 = True
+    train_imdb = False
+
     model_GRU = False
 
     # Run LSTM Modelling
     if model_LSTM:
-        num_rows = 25000  # Number of rows to load from data
+        num_rows = 100000  # Number of rows to load from data
         max_features = 20000  # Maximum number of features (words) to process
 
-        # Load Sentiment 140 dataset
-        (x_train_140, y_train_140), \
-        (x_test_140, y_test_140), vocab_size = datasets.load_sentiment_140(num_words=max_features,
-                                                                           num_rows=num_rows,
-                                                                           test_split=0.2,
-                                                                           seed=69)
+        if train_140:
 
-        # Load IMDB dataset
-        (x_train_imdb, y_train_imdb), \
-        (x_test_imdb, y_test_imdb) = tf.keras.datasets.imdb.load_data(num_words=max_features)
+            # Load Sentiment 140 dataset
+            (x_train_140, y_train_140), \
+            (x_test_140, y_test_140), vocab_size = datasets.load_sentiment_140(num_words=max_features,
+                                                                               num_rows=num_rows,
+                                                                               test_split=0.2,
+                                                                               seed=69)
 
-        if 'vocab_size' not in locals():
-            vocab_size = max_features
+            # Train and evaluate model
+            loss_140, acc_140 = run_lstm_model(x_train_140, y_train_140, x_test_140, y_test_140,
+                                               num_features=vocab_size,
+                                               metrics=["acc"])
 
-        loss_140, acc_140 = run_lstm_model(x_train_140, y_train_140, x_test_140, y_test_140,
-                                           num_features=vocab_size,
-                                           metrics=["acc"])
+            # Show results
+            print('Test loss 140:', loss_140)
+            print('Test accuracy 140:', acc_140)
 
-        # loss_imdb, acc_imdb = run_lstm_model(x_train_imdb, y_train_imdb, x_test_imdb, y_test_imdb,
-        #                                      num_features=max_features,
-        #                                      metrics=["acc"])
+        if train_imdb:
 
-        print('Test loss 140:', loss_140)
-        print('Test accuracy 140:', acc_140)
+            # Load IMDB dataset
+            (x_train_imdb, y_train_imdb), \
+            (x_test_imdb, y_test_imdb) = tf.keras.datasets.imdb.load_data(num_words=max_features)
 
-        # print('Test loss IMDB:', loss_imdb)
-        # print('Test accuracy IMDB:', acc_imdb)
+            # Train and evaluate model
+            loss_imdb, acc_imdb = run_lstm_model(x_train_imdb, y_train_imdb, x_test_imdb, y_test_imdb,
+                                                 num_features=max_features,
+                                                 metrics=["acc"])
+
+            # Show results
+            print('Test loss IMDB:', loss_imdb)
+            print('Test accuracy IMDB:', acc_imdb)
 
     # Run GRU modelling
     if model_GRU:
