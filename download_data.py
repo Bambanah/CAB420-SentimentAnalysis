@@ -85,5 +85,83 @@ def download_from_drive(data_dir="data/"):
         with open('{}/{}'.format(data_dir, file['name']), 'w+b') as f:
             f.write(fh.getvalue())
 
-        print("{} saved to data folder.\n")
+        print("{} saved to data folder.\n".format(file['name']))
 
+
+def unzip_data(data_dir="data/", save_dir="data/"):
+    """
+    Unzips files saved in local data folder and organises to subdirectories.
+    """
+
+    # Get list of all zip files in data directory
+    files_to_unzip = glob.glob("data/*.zip")
+
+    # TODO: Check if files are unzipped
+
+    print("Unzipping: {}".format(files_to_unzip))
+
+    # Need to hardcode unzipping method since each dataset is different
+    if 'data\\amazonreviews.zip' in files_to_unzip:
+        file_index = files_to_unzip.index('data\\amazonreviews.zip')
+        file = files_to_unzip[file_index]
+        files_to_unzip.remove(file)
+
+        if not os.path.exists("data/amazon-reviews"):
+            os.mkdir("data/amazon-reviews")
+
+        with zipfile.ZipFile(file) as z:
+            z.extractall("data/temp")
+
+        with bz2.BZ2File("data/temp/train.ft.txt.bz2") as train_file:
+            train_data = open("data/amazon-reviews/train.txt", "wb+")
+
+            train_data.write(train_file.read())
+
+        with bz2.BZ2File("data/temp/test.ft.txt.bz2") as txt_file:
+            test_data = open("data/amazon-reviews/test.txt", "wb")
+
+            test_data.write(txt_file.read())
+        
+        shutil.rmtree("data/temp", ignore_errors=True)
+
+    if 'data\\consumer-reviews-of-amazon-products.zip' in files_to_unzip:
+        file_index = files_to_unzip.index('data\\consumer-reviews-of-amazon-products.zip')
+        zipped = files_to_unzip[file_index]
+        files_to_unzip.remove(zipped)
+
+        with zipfile.ZipFile(zipped) as z:
+            z.extractall("data/amazon-consumer-reviews")
+
+    if 'data\\coronavirus-covid19-tweets-early-april.zip' in files_to_unzip:
+        file_index = files_to_unzip.index('data\\coronavirus-covid19-tweets-early-april.zip')
+        zipped = files_to_unzip[file_index]
+        files_to_unzip.remove(zipped)
+
+        with zipfile.ZipFile(zipped) as z:
+            z.extractall("data/covid19-tweets")
+
+    if 'data\\coronavirus-covid19-tweets-late-april.zip' in files_to_unzip:
+        file_index = files_to_unzip.index('data\\coronavirus-covid19-tweets-late-april.zip')
+        zipped = files_to_unzip[file_index]
+        files_to_unzip.remove(zipped)
+
+        with zipfile.ZipFile(zipped) as z:
+            z.extractall("data/covid19-tweets")
+
+    if 'data\\coronavirus-covid19-tweets.zip' in files_to_unzip:
+        file_index = files_to_unzip.index('data\\coronavirus-covid19-tweets.zip')
+        zipped = files_to_unzip[file_index]
+        files_to_unzip.remove(zipped)
+
+        with zipfile.ZipFile(zipped) as z:
+            z.extractall("data/covid19-tweets")
+
+    if 'data\\sentiment140.zip' in files_to_unzip:
+        file_index = files_to_unzip.index('data\\sentiment140.zip')
+        zipped = files_to_unzip[file_index]
+        files_to_unzip.remove(zipped)
+
+        with zipfile.ZipFile(zipped) as z:
+            z.extractall("data/sentiment-140")
+
+    print("All data extracted")

@@ -78,9 +78,15 @@ if __name__ == "__main__":
     grab_data = True
 
     if grab_data:
+        # Download all files in shared data folder
         download_data.download_from_drive()
 
-    model_LSTM = True
+        # Unzip each zip saved in local data folder
+        download_data.unzip_data()
+
+        print("Data organised")
+
+    model_LSTM = False
     train_140 = True
     train_imdb = False
 
