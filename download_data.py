@@ -116,7 +116,7 @@ def unzip_data(data_dir="data/", save_dir="data/"):
 
     # TODO: Check if files are unzipped
 
-    print("Unzipping: {}".format(files_to_unzip))
+    print("Extracting: {}".format(', '.join(files_to_unzip)))
 
     # Need to hardcode unzipping methods since each dataset is different
     if 'data\\amazonreviews.zip' in files_to_unzip:
