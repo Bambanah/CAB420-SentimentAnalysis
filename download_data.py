@@ -1,19 +1,21 @@
-from __future__ import print_function
 import pickle
 import os.path
 import io
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
-from apiclient.http import MediaIoBaseDownload
+from googleapiclient.http import MediaIoBaseDownload
 
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/drive']
 
 
-def main():
-    """Shows basic usage of the Drive v3 API.
-    Prints the names and ids of the first 10 files the user has access to.
+def download_from_drive(data_dir="data/"):
+    """
+    Downloads files from shared data folder to local folder.
+
+    # Arguments
+        data_dir: Specifies relative directory to save data to. Default "data/"
     """
     creds = None
     # The file token.pickle stores the user's access and refresh tokens, and is
@@ -54,9 +56,9 @@ def main():
             break
 
     # Create data directory if it doesn't exist
-    if not os.path.isdir('data/'):
+    if not os.path.isdir(data_dir):
         print("Data folder not found. Creating...\n")
-        os.makedirs('data/')
+        os.makedirs(data_dir)
 
     for file in file_list:
 
@@ -76,15 +78,12 @@ def main():
         print("")
 
         # Write byte stream to file
-        if not os.path.exists('data/{}'.format(file['name'])):
-            with open('data/{}'.format(file['name']), 'w'):
+        if not os.path.exists('{}/{}'.format(data_dir, file['name'])):
+            with open('{}/{}'.format(data_dir, file['name']), 'w'):
                 pass
 
-        with open('data/{}'.format(file['name']), 'w+b') as f:
+        with open('{}/{}'.format(data_dir, file['name']), 'w+b') as f:
             f.write(fh.getvalue())
 
         print("{} saved to data folder.\n")
 
-
-if __name__ == '__main__':
-    main()

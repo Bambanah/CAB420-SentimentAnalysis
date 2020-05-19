@@ -7,6 +7,7 @@ from tensorflow.keras.preprocessing import sequence
 
 import models
 import datasets
+import download_data
 
 
 def run_lstm_model(x_train, y_train, x_test, y_test,
@@ -73,6 +74,11 @@ def run_lstm_model(x_train, y_train, x_test, y_test,
 
 
 if __name__ == "__main__":
+
+    grab_data = True
+
+    if grab_data:
+        download_data.download_from_drive()
 
     model_LSTM = True
     train_140 = True
