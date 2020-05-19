@@ -6,6 +6,11 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from googleapiclient.http import MediaIoBaseDownload
 
+import glob
+import zipfile
+import bz2
+import shutil
+
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/drive']
 
@@ -43,6 +48,7 @@ def download_from_drive(data_dir="data/"):
     page_token = None
     file_list = []
     while True:
+
         response = service.files().list(q="'19szE0nEAeR6W3wRTNoC1HX6mJUJg-m8t' in parents",
                                         spaces='drive',
                                         fields='nextPageToken, files(id, name)',
@@ -50,7 +56,7 @@ def download_from_drive(data_dir="data/"):
         for file in response.get('files', []):
             # Process change
             file_list.append({"id": file.get('id'), "name": file.get('name')})
-            print('Found file: %s (%s)' % (file.get('name'), file.get('id')))
+
         page_token = response.get('nextPageToken', None)
         if page_token is None:
             break
@@ -60,7 +66,19 @@ def download_from_drive(data_dir="data/"):
         print("Data folder not found. Creating...\n")
         os.makedirs(data_dir)
 
-    for file in file_list:
+    print("Found {} files in shared folder".format(len(file_list)))
+
+    # Get list of all zip files saved in data directory
+    local_files = [os.path.basename(x) for x in glob.glob("data/*.zip")]
+    files_to_download = [file for file in file_list if file["name"] not in local_files]
+
+    if len(files_to_download) == 0:
+        print("All files are downloaded")
+    else:
+        print("Downloading {} files...\n".format(len(files_to_download)))
+
+    # Iterate over each file returned as existing in shared folder
+    for file in files_to_download:
 
         print("\rDownloading {}: 0%".format(
             file['name']), end="")
