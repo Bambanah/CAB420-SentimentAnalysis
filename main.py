@@ -9,7 +9,6 @@ import models
 import datasets
 import download_data
 
-
 def run_lstm_model(x_train, y_train, x_test, y_test,
                    num_features,
                    metrics=None,
