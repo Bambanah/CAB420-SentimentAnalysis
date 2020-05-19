@@ -118,7 +118,7 @@ def unzip_data(data_dir="data/", save_dir="data/"):
 
     print("Unzipping: {}".format(files_to_unzip))
 
-    # Need to hardcode unzipping method since each dataset is different
+    # Need to hardcode unzipping methods since each dataset is different
     if 'data\\amazonreviews.zip' in files_to_unzip:
         file_index = files_to_unzip.index('data\\amazonreviews.zip')
         file = files_to_unzip[file_index]
@@ -139,7 +139,7 @@ def unzip_data(data_dir="data/", save_dir="data/"):
             test_data = open("data/amazon-reviews/test.txt", "wb")
 
             test_data.write(txt_file.read())
-        
+
         shutil.rmtree("data/temp", ignore_errors=True)
 
     if 'data\\consumer-reviews-of-amazon-products.zip' in files_to_unzip:
@@ -181,5 +181,13 @@ def unzip_data(data_dir="data/", save_dir="data/"):
 
         with zipfile.ZipFile(zipped) as z:
             z.extractall("data/sentiment-140")
+
+    if len(files_to_unzip) > 0:
+        for zip_file in files_to_unzip:
+            save_path = zip_file.split(sep=".")[:-1]
+
+            print(save_path)
+            with zipfile.ZipFile(zip_file) as z:
+                z.extractall(save_path)
 
     print("All data extracted")
