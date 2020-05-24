@@ -8,6 +8,12 @@ from tensorflow.keras.preprocessing import sequence
 import models
 import datasets
 import download_data
+import pandas as pd
+from models import ensemble_classifers
+
+def run_simple_models(x_train, y_train, x_test, y_test):
+    maxlen = 100
+    ensemble_classifers(x_train, y_train, x_test, y_test)
 
 def run_lstm_model(x_train, y_train, x_test, y_test,
                    num_features,
@@ -74,7 +80,7 @@ def run_lstm_model(x_train, y_train, x_test, y_test,
 
 if __name__ == "__main__":
 
-    grab_data = True
+    grab_data = False
 
     if grab_data:
         # Download all files in shared data folder
@@ -88,23 +94,23 @@ if __name__ == "__main__":
     model_LSTM = False
     train_140 = True
     train_imdb = False
-
+    simple_classifers = True
     model_GRU = False
-
+    num_rows = 100000  # Number of rows to load from data
+    max_features = 20000  # Maximum number of features (words) to process
+    
+            
+            
     # Run LSTM Modelling
-    if model_LSTM:
-        num_rows = 100000  # Number of rows to load from data
-        max_features = 20000  # Maximum number of features (words) to process
-
+    if model_LSTM:       
         if train_140:
-
             # Load Sentiment 140 dataset
             (x_train_140, y_train_140), \
             (x_test_140, y_test_140), vocab_size = datasets.load_sentiment_140(num_words=max_features,
                                                                                num_rows=num_rows,
                                                                                test_split=0.2,
-                                                                               seed=69)
-
+                                                                               seed=69,
+                                                                               simple_classifer = simple_classifers)
             # Train and evaluate model
             loss_140, acc_140 = run_lstm_model(x_train_140, y_train_140, x_test_140, y_test_140,
                                                num_features=vocab_size,
@@ -114,12 +120,10 @@ if __name__ == "__main__":
             print('Test loss 140:', loss_140)
             print('Test accuracy 140:', acc_140)
 
-        if train_imdb:
-
+        if train_imdb:            
             # Load IMDB dataset
             (x_train_imdb, y_train_imdb), \
             (x_test_imdb, y_test_imdb) = tf.keras.datasets.imdb.load_data(num_words=max_features)
-
             # Train and evaluate model
             loss_imdb, acc_imdb = run_lstm_model(x_train_imdb, y_train_imdb, x_test_imdb, y_test_imdb,
                                                  num_features=max_features,
@@ -128,7 +132,19 @@ if __name__ == "__main__":
             # Show results
             print('Test loss IMDB:', loss_imdb)
             print('Test accuracy IMDB:', acc_imdb)
-
+    if simple_classifers:
+        if train_140:
+            (x_train_140, y_train_140), \
+            (x_test_140, y_test_140), vocab_size = datasets.load_sentiment_140(num_words=max_features,
+                                                                               num_rows=num_rows,
+                                                                               test_split=0.2,
+                                                                               seed=69,
+                                                                               simple_classifer = simple_classifers)
+            run_simple_models(x_train_140, y_train_140, x_test_140, y_test_140)
+        if train_imdb:
+            run_simple_models(x_train_imdb, y_train_imdb, x_test_imdb, y_test_imdb)
+        pass
+        
     # Run GRU modelling
     if model_GRU:
         pass
