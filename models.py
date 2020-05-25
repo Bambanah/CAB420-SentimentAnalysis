@@ -14,12 +14,11 @@ def lstm(vocab_size,
          kernel_size=5,
          lstm_output_size=70,
          metrics=None):
-
     model = Sequential()
 
     model.add(Embedding(vocab_size, embedding_size, input_length=maxlen))
     model.add(Dropout(0.2))
-    #
+
     model.add(Conv1D(filters,
                      kernel_size,
                      padding='valid',
@@ -27,7 +26,7 @@ def lstm(vocab_size,
                      strides=1))
     model.add(MaxPooling1D(pool_size=pool_size))
 
-    model.add(LSTM(lstm_output_size, return_sequences=True))
+    model.add(LSTM(input_shape=(80000, maxlen), units=lstm_output_size, return_sequences=True))
     model.add(Dropout(0.2))
 
     model.add(LSTM(lstm_output_size))
