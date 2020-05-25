@@ -93,12 +93,14 @@ if __name__ == "__main__":
 
     num_rows = 100000  # Number of rows to load from data
     max_features = 20000  # Maximum number of features (words) to process
+    maxlen = 100  # Maximum length of sequences
 
     # Load Sentiment 140 dataset
     (x_train_140, y_train_140), \
     (x_test_140, y_test_140) = datasets.load_sentiment_140(data_dir="data",
                                                            num_words=max_features,
                                                            num_rows=num_rows,
+                                                           maxlen=maxlen,
                                                            test_split=0.2,
                                                            seed=69)
 

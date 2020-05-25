@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 import re
-import os
 from sklearn.model_selection import train_test_split
 import tensorflow.keras.preprocessing as preprocessing
 from tensorflow.keras.preprocessing import sequence
@@ -18,9 +17,6 @@ def preprocess_text(text):
 
     # Remove punctuation and numbers
     text = re.sub('[^a-zA-Z]', ' ', text)
-
-    # Remove single characters
-    # text = re.sub(r"\s+[a-zA-Z]\s+", ' ', text)
 
     # Remove all @usernames
     text = re.sub(r'@[^\s]+', ' ', text)
