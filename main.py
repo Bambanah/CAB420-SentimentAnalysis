@@ -9,6 +9,7 @@ import models
 import datasets
 import download_data
 
+
 def run_lstm_model(x_train, y_train, x_test, y_test,
                    num_features,
                    metrics=None,
@@ -27,8 +28,6 @@ def run_lstm_model(x_train, y_train, x_test, y_test,
         epochs = 20
 
     # Embedding
-    if maxlen is None:
-        maxlen = 100
     if embedding_size is None:
         embedding_size = 64
 
@@ -44,9 +43,6 @@ def run_lstm_model(x_train, y_train, x_test, y_test,
     if lstm_output_size is None:
         lstm_output_size = 70
 
-    print('Pad sequences (samples x time)')
-    x_train = sequence.pad_sequences(x_train, maxlen=maxlen)
-    x_test = sequence.pad_sequences(x_test, maxlen=maxlen)
     print('x_train shape:', x_train.shape)
     print('x_test shape:', x_test.shape)
 
@@ -57,8 +53,7 @@ def run_lstm_model(x_train, y_train, x_test, y_test,
                              kernel_size=kernel_size,
                              filters=filters,
                              pool_size=pool_size,
-                             lstm_output_size=lstm_output_size,
-                             metrics=metrics)
+                             lstm_output_size=lstm_output_size)
 
     print('Train...')
     lstm_model.fit(x_train,
@@ -74,40 +69,48 @@ def run_lstm_model(x_train, y_train, x_test, y_test,
 
 if __name__ == "__main__":
 
-    grab_data = True
+    grab_data = False
 
     if grab_data:
         # Download all files in shared data folder
-        download_data.download_from_drive()
+        download_data.download_from_drive(file_names=['sentiment140.zip'])
 
         # Unzip each zip saved in local data folder
         download_data.unzip_data()
 
         print("Data organised")
 
-    model_LSTM = False
+    # Run
+    model_LSTM = True
+    train_on_all = True
     train_140 = True
     train_imdb = False
 
     model_GRU = False
 
+    num_rows = 100000  # Number of rows to load from data
+    max_features = 20000  # Maximum number of features (words) to process
+    maxlen = 100  # Maximum length of sequences
+
+    # Load Sentiment 140 dataset
+    (x_train_140, y_train_140), \
+    (x_test_140, y_test_140) = datasets.load_sentiment_140(data_dir="data",
+                                                           num_words=max_features,
+                                                           num_rows=num_rows,
+                                                           maxlen=maxlen,
+                                                           test_split=0.2,
+                                                           seed=69)
+
+    # Load IMDB dataset
+    (x_train_imdb, y_train_imdb), \
+    (x_test_imdb, y_test_imdb) = tf.keras.datasets.imdb.load_data(num_words=max_features)
+
     # Run LSTM Modelling
     if model_LSTM:
-        num_rows = 100000  # Number of rows to load from data
-        max_features = 20000  # Maximum number of features (words) to process
-
         if train_140:
-
-            # Load Sentiment 140 dataset
-            (x_train_140, y_train_140), \
-            (x_test_140, y_test_140), vocab_size = datasets.load_sentiment_140(num_words=max_features,
-                                                                               num_rows=num_rows,
-                                                                               test_split=0.2,
-                                                                               seed=69)
-
             # Train and evaluate model
             loss_140, acc_140 = run_lstm_model(x_train_140, y_train_140, x_test_140, y_test_140,
-                                               num_features=vocab_size,
+                                               num_features=max_features,
                                                metrics=["acc"])
 
             # Show results
@@ -115,11 +118,6 @@ if __name__ == "__main__":
             print('Test accuracy 140:', acc_140)
 
         if train_imdb:
-
-            # Load IMDB dataset
-            (x_train_imdb, y_train_imdb), \
-            (x_test_imdb, y_test_imdb) = tf.keras.datasets.imdb.load_data(num_words=max_features)
-
             # Train and evaluate model
             loss_imdb, acc_imdb = run_lstm_model(x_train_imdb, y_train_imdb, x_test_imdb, y_test_imdb,
                                                  num_features=max_features,

@@ -2,7 +2,6 @@
 data/
 
 # Drive API Credentials
-credentials.json
 token.pickle
 
 # PyCharm files

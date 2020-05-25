@@ -3,11 +3,12 @@ import numpy as np
 import re
 from sklearn.model_selection import train_test_split
 import tensorflow.keras.preprocessing as preprocessing
+from tensorflow.keras.preprocessing import sequence
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 
 def preprocess_text(text):
     # TODO: Spell check
-
     # Remove URLs
     text = re.sub(
         r'(https?://(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+['
@@ -16,9 +17,6 @@ def preprocess_text(text):
 
     # Remove punctuation and numbers
     text = re.sub('[^a-zA-Z]', ' ', text)
-
-    # Remove single characters
-    # text = re.sub(r"\s+[a-zA-Z]\s+", ' ', text)
 
     # Remove all @usernames
     text = re.sub(r'@[^\s]+', ' ', text)
@@ -31,35 +29,49 @@ def preprocess_text(text):
     return text
 
 
-def preprocess(x_train, x_test, num_words):
+def preprocess(text_array, num_words, vectorizer="keras", maxlen=100):
     """
     Takes an array of text strings and outputs an array where each text is a vector of integers assigned based on word
     frequency
     """
-
     # Apply specialised preprocessing to each text item
-    x_train = np.array([preprocess_text(x) for x in x_train])
-    x_test = np.asarray([preprocess_text(x) for x in x_test])
+    text_array = np.array([preprocess_text(x) for x in text_array])
 
     # Use keras to tokenize words
-    tokenizer = preprocessing.text.Tokenizer(
-        num_words=num_words
-    )
+    if vectorizer == "tfid":
+        #
+        #
+        #   DOESN'T FUCKING WORK???
+        #
+        #
 
-    # Tokenize text data
-    tokenizer.fit_on_texts(x_train)
+        vectorizer = TfidfVectorizer(min_df=5, max_df=0.8, sublinear_tf=True, use_idf=True)
 
-    # Encode text data into sequences
-    word_index = tokenizer.word_index
-    vocab_size = len(word_index) + 1
+        text_array = vectorizer.fit_transform(text_array)
+        text_array = text_array.toarray()
+        print(text_array[0])
 
-    x_train = tokenizer.texts_to_sequences(x_train)
-    x_test = tokenizer.texts_to_sequences(x_test)
+        text_array = sequence.pad_sequences(text_array, maxlen=maxlen)
 
-    return (x_train, x_test), vocab_size
+    elif vectorizer == "keras":
+        tokenizer = preprocessing.text.Tokenizer(
+            num_words=num_words
+        )
+
+        # Tokenize text data
+        tokenizer.fit_on_texts(text_array)
+
+        text_array = tokenizer.texts_to_sequences(text_array)
+        print(np.shape(text_array))
+
+        text_array = sequence.pad_sequences(text_array, maxlen=maxlen)
+    else:
+        raise ValueError("Incorrect argument for vectorizer, must be tfid or keras")
+
+    return text_array
 
 
-def load_sentiment_140(num_words=None, num_rows=None, test_split=0.2, seed=100):
+def load_sentiment_140(data_dir="data", num_words=None, num_rows=None, maxlen=None, test_split=0.2, seed=100):
     """Loads the Sentiment 140 dataset, with preprocessing
 
     # Arguments
@@ -74,8 +86,12 @@ def load_sentiment_140(num_words=None, num_rows=None, test_split=0.2, seed=100):
         Tuple of Numpy arrays: `(x_train, y_train), (x_test, y_test)`.
     """
 
+    if not maxlen:
+        maxlen = 100
+
     # Load dataset from file
-    sentiment_data = pd.read_csv("data/sentiment-140/training.1600000.processed.noemoticon.csv",
+    file_dir = data_dir + "/sentiment-140/training.1600000.processed.noemoticon.csv"
+    sentiment_data = pd.read_csv(file_dir,
                                  encoding='ISO-8859-1',
                                  names=["Sentiment", "ID", "Date", "Query", "User", "Text"])
 
@@ -88,19 +104,22 @@ def load_sentiment_140(num_words=None, num_rows=None, test_split=0.2, seed=100):
         num_rows = len(sentiment_data["Sentiment"])
     sentiment_data = sentiment_data.iloc[:num_rows]
 
-    # Split training data
-    x_train, x_test, y_train, y_test = train_test_split(sentiment_data["Text"].to_numpy(),
-                                                        sentiment_data["Sentiment"].to_numpy(), test_size=test_split,
+    # Apply text preprocessing to training text
+    vectorised_sentiment_text = preprocess(sentiment_data["Text"].to_numpy(),
+                                           num_words,
+                                           vectorizer="keras",
+                                           maxlen=maxlen)
+    sentiment_values = sentiment_data["Sentiment"].to_numpy()
+
+    # Convert 4 to 1
+    sentiment_values[sentiment_values == 4] = 1
+
+    x_train, x_test, y_train, y_test = train_test_split(vectorised_sentiment_text,
+                                                        sentiment_values,
+                                                        test_size=test_split,
                                                         random_state=seed)
 
-    # Convert labels of 4 to 1
-    y_train[y_train == 4] = 1
-    y_test[y_test == 4] = 1
-
-    # Apply text preprocessing to training text
-    (x_train, x_test), vocab_size = preprocess(x_train, x_test, num_words)
-
-    return (x_train, y_train), (x_test, y_test), vocab_size
+    return (x_train, y_train), (x_test, y_test)
 
 
 def load_covid_twitter():
