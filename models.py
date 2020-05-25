@@ -9,6 +9,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import GridSearchCV
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
 import numpy as np
 import pandas as pd
 
@@ -18,6 +19,15 @@ def ensemble_classifers(X_train_opinion, y_train_opinion, x_test_opinion, y_test
      x_test_opinion = x_test_opinion[:10000]
      y_test_opinion = y_test_opinion[:10000]
      model_params = {
+          'decision_tree_classifier' : {
+               'model': DecisionTreeClassifier(),
+               'params': {
+                    'max_depth': [3, None],
+                    "min_samples_leaf": np.arange(1,9),
+                    "criterion": ["gini", "entropy"]
+                    
+               }
+          },
           'svm': {
                'model': svm.SVC(),
                'params' : {

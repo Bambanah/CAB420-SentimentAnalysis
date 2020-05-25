@@ -39,7 +39,6 @@ def preprocess(x_train, x_test, num_words, simple_classifer):
     x_train = np.array([preprocess_text(x) for x in x_train])
     
     if not simple_classifer:
-        # ???????
         x_test = np.asarray([preprocess_text(x) for x in x_test])
 
     # Use keras to tokenize words
@@ -51,7 +50,6 @@ def preprocess(x_train, x_test, num_words, simple_classifer):
         tokenizer = preprocessing.text.Tokenizer(
             num_words=num_words
         )
-
         # Tokenize text data
         tokenizer.fit_on_texts(x_train)
 
