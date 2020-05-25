@@ -39,6 +39,12 @@ def preprocess(text_array, num_words, vectorizer="keras", maxlen=100):
 
     # Use keras to tokenize words
     if vectorizer == "tfid":
+        #
+        #
+        #   DOESN'T FUCKING WORK???
+        #
+        #
+
         vectorizer = TfidfVectorizer(min_df=5, max_df=0.8, sublinear_tf=True, use_idf=True)
 
         text_array = vectorizer.fit_transform(text_array)
@@ -101,7 +107,7 @@ def load_sentiment_140(data_dir="data", num_words=None, num_rows=None, maxlen=No
     # Apply text preprocessing to training text
     vectorised_sentiment_text = preprocess(sentiment_data["Text"].to_numpy(),
                                            num_words,
-                                           vectorizer="tfid",
+                                           vectorizer="keras",
                                            maxlen=maxlen)
     sentiment_values = sentiment_data["Sentiment"].to_numpy()
 

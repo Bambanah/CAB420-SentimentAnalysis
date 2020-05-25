@@ -48,6 +48,6 @@ def lstm(vocab_size,
                   optimizer=opt,
                   metrics=metrics)
 
-    print(model.summary())
+    # print(model.summary())
 
     return model
