@@ -28,8 +28,6 @@ def run_lstm_model(x_train, y_train, x_test, y_test,
         epochs = 20
 
     # Embedding
-    if maxlen is None:
-        maxlen = 100
     if embedding_size is None:
         embedding_size = 64
 
@@ -55,8 +53,7 @@ def run_lstm_model(x_train, y_train, x_test, y_test,
                              kernel_size=kernel_size,
                              filters=filters,
                              pool_size=pool_size,
-                             lstm_output_size=lstm_output_size,
-                             metrics=metrics)
+                             lstm_output_size=lstm_output_size)
 
     print('Train...')
     lstm_model.fit(x_train,

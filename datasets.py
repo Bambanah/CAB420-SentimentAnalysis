@@ -29,7 +29,7 @@ def preprocess_text(text):
     return text
 
 
-def preprocess(text_array, num_words, vectorizer="tfid", maxlen=100):
+def preprocess(text_array, num_words, vectorizer="keras", maxlen=100):
     """
     Takes an array of text strings and outputs an array where each text is a vector of integers assigned based on word
     frequency
@@ -42,6 +42,11 @@ def preprocess(text_array, num_words, vectorizer="tfid", maxlen=100):
         vectorizer = TfidfVectorizer(min_df=5, max_df=0.8, sublinear_tf=True, use_idf=True)
 
         text_array = vectorizer.fit_transform(text_array)
+        text_array = text_array.toarray()
+        print(text_array[0])
+
+        text_array = sequence.pad_sequences(text_array, maxlen=maxlen)
+
     elif vectorizer == "keras":
         tokenizer = preprocessing.text.Tokenizer(
             num_words=num_words
@@ -51,6 +56,7 @@ def preprocess(text_array, num_words, vectorizer="tfid", maxlen=100):
         tokenizer.fit_on_texts(text_array)
 
         text_array = tokenizer.texts_to_sequences(text_array)
+        print(np.shape(text_array))
 
         text_array = sequence.pad_sequences(text_array, maxlen=maxlen)
     else:
@@ -95,7 +101,7 @@ def load_sentiment_140(data_dir="data", num_words=None, num_rows=None, maxlen=No
     # Apply text preprocessing to training text
     vectorised_sentiment_text = preprocess(sentiment_data["Text"].to_numpy(),
                                            num_words,
-                                           vectorizer="keras",
+                                           vectorizer="tfid",
                                            maxlen=maxlen)
     sentiment_values = sentiment_data["Sentiment"].to_numpy()
 
