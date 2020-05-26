@@ -12,13 +12,34 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 import numpy as np
 import pandas as pd
-
+from xgboost import XGBClassifier
+from sklearn.ensemble import GradientBoostingClassifier
 def ensemble_classifers(X_train_opinion, y_train_opinion, x_test_opinion, y_test_opinion):
      X_train_opinion = X_train_opinion[:10000]
      y_train_opinion = y_train_opinion[:10000]
      x_test_opinion = x_test_opinion[:10000]
      y_test_opinion = y_test_opinion[:10000]
+     max_depths = np.linspace(1, 32, 32, endpoint=True)
+     min_samples_leafs = np.linspace(0.1, 0.5, 5, endpoint=True)
      model_params = {
+          'XGBgradient_boost' : {
+               'model': XGBClassifier(),
+               'params': {
+                    'learning_rate': [0.05,  0.1,  0.5,  1],
+                    "n_estimators": [1, 4, 16, 64, 100],
+                    # "max_depth": max_depths,
+                    # "min_samples_leaf": min_samples_leafs,
+               }
+          },
+          'gradient_boost' : {
+               'model': GradientBoostingClassifier(),
+               'params': {
+                    'learning_rate': [0.05,  0.1,  0.5,  1],
+                    "n_estimators": [1, 4, 16, 64, 200],
+                    # "max_depth": max_depths,
+                    # "min_samples_leaf": min_samples_leafs,
+               }
+          },
           'decision_tree_classifier' : {
                'model': DecisionTreeClassifier(),
                'params': {
@@ -28,13 +49,13 @@ def ensemble_classifers(X_train_opinion, y_train_opinion, x_test_opinion, y_test
                     
                }
           },
-          'svm': {
-               'model': svm.SVC(),
-               'params' : {
-                    'C': np.arange(1,7),
-                    "gamma": [0.01, 1, 2, 3]
-               }  
-          },
+          # 'svm': {
+          #      'model': svm.SVC(),
+          #      'params' : {
+          #           'C': np.arange(1,7),
+          #           "gamma": [0.01, 1, 2, 3]
+          #      }  
+          # },
           'random_forest': {
                'model': RandomForestClassifier(),
                'params' : {
