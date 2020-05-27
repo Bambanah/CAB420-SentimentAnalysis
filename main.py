@@ -10,10 +10,16 @@ import datasets
 import download_data
 import pandas as pd
 from models import ensemble_classifers
+from sklearn.metrics import classification_report 
+import matplotlib.pyplot as plt
 
 def run_simple_models(x_train, y_train, x_test, y_test):
     maxlen = 100
     ensemble_classifers(x_train, y_train, x_test, y_test)
+
+
+
+
 
 def run_lstm_model(x_train, y_train, x_test, y_test,
                    num_features,
