@@ -1,6 +1,9 @@
 # Data
 data/
 
+# Figures
+figures/
+
 # Drive API Credentials
 token.pickle
 

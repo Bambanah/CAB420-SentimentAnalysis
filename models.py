@@ -5,10 +5,11 @@ from tensorflow.keras.layers import Embedding
 from tensorflow.keras.layers import LSTM
 from tensorflow.keras.layers import Conv1D, MaxPooling1D
 
+from tensorflow.keras.utils import plot_model
+
 
 def lstm(vocab_size,
          embedding_size=128,
-         maxlen=100,
          filters=64,
          pool_size=None,
          kernel_size=5,
@@ -25,7 +26,7 @@ def lstm(vocab_size,
                      strides=1))
     model.add(MaxPooling1D(pool_size=pool_size))
 
-    model.add(LSTM(input_shape=(80000, maxlen), units=lstm_output_size, return_sequences=True))
+    model.add(LSTM(lstm_output_size, return_sequences=True))
     model.add(Dropout(0.2))
 
     model.add(LSTM(lstm_output_size))
@@ -33,10 +34,6 @@ def lstm(vocab_size,
 
     model.add(Dense(32, activation='relu'))
     model.add(Dropout(0.2))
-
-    # model.add(Embedding(vocab_size, embedding_size))
-    # model.add(LSTM(lstm_output_size))
-    # model.add(Dropout(0.5))
 
     model.add(Dense(1, activation='sigmoid'))
 
@@ -48,6 +45,7 @@ def lstm(vocab_size,
                   optimizer=opt,
                   metrics=metrics)
 
+    plot_model(model, to_file="figures/RNN/LSTM_design.png", rankdir="TB")  # TB = Vertical, LR = horizontal
     # print(model.summary())
 
     return model
