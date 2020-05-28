@@ -80,19 +80,24 @@ if __name__ == "__main__":
 
         print("Data organised")
 
-    # Run
+    # Model training toggles
     model_LSTM = True
-    train_on_all = True
-    train_140 = True
-    train_imdb = False
-
     model_GRU = False
 
+    train_in_sequence = False  # Train model on multiple datasets, instead of resetting and training seperately
+
+    # Datasets to train LSTM model on
+    train_140 = True  # Train selected models on sentiment 140 dataset
+    train_imdb = True  # Train selected models on keras imdb dataset
+
+    # Data parameters
     num_rows = 100000  # Number of rows to load from data
     max_features = 20000  # Maximum number of features (words) to process
     maxlen = 100  # Maximum length of sequences
 
-    # Load Sentiment 140 dataset
+    # Load preprocessed datasets
+
+    # Sentiment 140
     (x_train_140, y_train_140), \
     (x_test_140, y_test_140) = datasets.load_sentiment_140(data_dir="data",
                                                            num_words=max_features,
@@ -101,12 +106,13 @@ if __name__ == "__main__":
                                                            test_split=0.2,
                                                            seed=69)
 
-    # Load IMDB dataset
+    # IMDB
     (x_train_imdb, y_train_imdb), \
     (x_test_imdb, y_test_imdb) = tf.keras.datasets.imdb.load_data(num_words=max_features)
 
     # Run LSTM Modelling
     if model_LSTM:
+
         if train_140:
             # Train and evaluate model
             loss_140, acc_140 = run_lstm_model(x_train_140, y_train_140, x_test_140, y_test_140,

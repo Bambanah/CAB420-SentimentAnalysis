@@ -44,12 +44,10 @@ def preprocess(text_array, num_words, vectorizer="keras", maxlen=100):
         #   DOESN'T FUCKING WORK???
         #
         #
-
         vectorizer = TfidfVectorizer(min_df=5, max_df=0.8, sublinear_tf=True, use_idf=True)
 
         text_array = vectorizer.fit_transform(text_array)
         text_array = text_array.toarray()
-        print(text_array[0])
 
         text_array = sequence.pad_sequences(text_array, maxlen=maxlen)
 
