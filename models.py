@@ -131,21 +131,20 @@ def ensemble_classifers(X_train_opinion, y_train_opinion, x_test_opinion, y_test
      confusion_matrix_model(opinion_classifier, y_test_opinion, x_test_opinion)
     
 
+from tensorflow.keras.utils import plot_model
+
 
 def lstm(vocab_size,
          embedding_size=128,
-         maxlen=100,
          filters=64,
          pool_size=None,
          kernel_size=5,
-         lstm_output_size=70,
-         metrics=None):
-
+         lstm_output_size=70):
     model = Sequential()
 
-    model.add(Embedding(vocab_size, embedding_size, input_length=maxlen))
+    model.add(Embedding(vocab_size, embedding_size))
     model.add(Dropout(0.2))
-    #
+
     model.add(Conv1D(filters,
                      kernel_size,
                      padding='valid',
@@ -166,10 +165,13 @@ def lstm(vocab_size,
 
     opt = tf.keras.optimizers.Adam(lr=1e-3, decay=1e-5)
 
+    metrics = ['acc']
+
     model.compile(loss='binary_crossentropy',
                   optimizer=opt,
                   metrics=metrics)
 
-    print(model.summary())
+    plot_model(model, to_file="figures/RNN/LSTM_design.png", rankdir="TB")  # TB = Vertical, LR = horizontal
+    # print(model.summary())
 
     return model

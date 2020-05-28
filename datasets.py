@@ -3,6 +3,7 @@ import numpy as np
 import re
 from sklearn.model_selection import train_test_split
 import tensorflow.keras.preprocessing as preprocessing
+
 from sklearn.feature_extraction.text import TfidfVectorizer
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer, SnowballStemmer
@@ -10,6 +11,9 @@ import nltk
 import matplotlib.pyplot as plt
 from wordcloud import WordCloud
 nltk.download('wordnet')
+from tensorflow.keras.preprocessing import sequence
+from sklearn.feature_extraction.text import TfidfVectorizer
+
 def preprocess_text(text):
     wordLemm = WordNetLemmatizer()
     snowStem = SnowballStemmer("english")
@@ -42,9 +46,6 @@ def preprocess_text(text):
 
     # Remove punctuation and numbers
     text = re.sub('[^a-zA-Z]', ' ', text)
-
-    # Remove single characters
-    # text = re.sub(r"\s+[a-zA-Z]\s+", ' ', text)
 
     # Remove all @usernames
     text = re.sub(r'@[^\s]+', ' ', text)
@@ -117,10 +118,11 @@ def preprocess(x_train, x_test,  y_train, num_words, simple_classifer):
         x_train = tokenizer.texts_to_sequences(x_train)
         x_test = tokenizer.texts_to_sequences(x_test)
 
+
     return (x_train, x_test), vocab_size
 
 
-def load_sentiment_140(num_words=None, num_rows=None, test_split=0.2, seed=100, simple_classifer = False):
+def load_sentiment_140(data_dir="data", num_words=None, num_rows=None, maxlen=None, test_split=0.2, seed=100):
     """Loads the Sentiment 140 dataset, with preprocessing
 
     # Arguments
@@ -135,12 +137,12 @@ def load_sentiment_140(num_words=None, num_rows=None, test_split=0.2, seed=100, 
         Tuple of Numpy arrays: `(x_train, y_train), (x_test, y_test)`.
     """
 
+    if not maxlen:
+        maxlen = 100
+
     # Load dataset from file
-   
-    # sentiment_data = pd.read_csv("data/sentiment-140/training.1600000.processed.noemoticon.csv",
-    #                              encoding='ISO-8859-1',
-    #                              names=["Sentiment", "ID", "Date", "Query", "User", "Text"])
-    sentiment_data = pd.read_csv("D:/sentiment140/training.1600000.processed.noemoticon.csv",
+    file_dir = data_dir + "/sentiment-140/training.1600000.processed.noemoticon.csv"
+    sentiment_data = pd.read_csv(file_dir,
                                  encoding='ISO-8859-1',
                                  names=["Sentiment", "ID", "Date", "Query", "User", "Text"])
 
@@ -173,10 +175,8 @@ def load_sentiment_140(num_words=None, num_rows=None, test_split=0.2, seed=100, 
         
         (x_train, x_test), vocab_size = preprocess(x_train, x_test, y_train, num_words, simple_classifer)
 
-        
 
-
-    return (x_train, y_train), (x_test, y_test), vocab_size
+    return (x_train, y_train), (x_test, y_test)
 
 
 def load_covid_twitter():

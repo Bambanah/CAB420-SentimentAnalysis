@@ -15,13 +15,16 @@ import shutil
 SCOPES = ['https://www.googleapis.com/auth/drive']
 
 
-def download_from_drive(data_dir="data/"):
+def download_from_drive(data_dir="data/", file_names=None):
     """
     Downloads files from shared data folder to local folder.
 
     # Arguments
         data_dir: Specifies relative directory to save data to. Default "data/"
     """
+    if file_names is None:
+        file_names = ['all']
+
     creds = None
     # The file token.pickle stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
@@ -70,7 +73,10 @@ def download_from_drive(data_dir="data/"):
 
     # Get list of all zip files saved in data directory
     local_files = [os.path.basename(x) for x in glob.glob("data/*.zip")]
-    files_to_download = [file for file in file_list if file["name"] not in local_files]
+    if file_names[0] == 'all':
+        files_to_download = [file for file in file_list if file["name"] not in local_files]
+    else:
+        files_to_download = [file for file in file_list if file["name"] not in local_files and file["name"] in file_names]
 
     if len(files_to_download) == 0:
         print("All files are downloaded")
