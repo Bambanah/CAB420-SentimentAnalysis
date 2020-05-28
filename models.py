@@ -21,18 +21,24 @@ from sklearn.metrics import accuracy_score
 from sklearn.naive_bayes import GaussianNB
 from datetime import datetime
 from sklearn.metrics import plot_confusion_matrix
-
+import scikitplot as skplt
+import matplotlib.pyplot as plt
 def confusion_matrix_model(opinion_classifier, y_test_opinion, x_test_opinion):
     disp = plot_confusion_matrix(opinion_classifier, x_test_opinion, y_test_opinion,
                             display_labels=['negative', 'positive'],
                             cmap=plt.cm.Blues,
                             normalize="true")
     disp.ax_.set_title("Normalized confusion matrix")
-    disp.ax_.xlabel("Predicted values", fontdict = {'size':14}, labelpad = 10)
-    disp.ax_.ylabel("Actual values"   , fontdict = {'size':14}, labelpad = 10)
+
     print("Normalized confusion matrix")
     print(disp.confusion_matrix)
     plt.show()
+    skplt.metrics.plot_roc_curve(y_test_opinion, opinion_classifier.predict_proba(x_test_opinion))
+    plt.show()
+    
+    
+    
+    
 def timer(start_time=None):
     if not start_time:
         start_time = datetime.now()
@@ -61,22 +67,21 @@ def ensemble_classifers(X_train_opinion, y_train_opinion, x_test_opinion, y_test
                     "colsample_bytree" : [ 0.3, 0.4, 0.5 , 0.7 ]
                }
           },
-          # 'decision_tree_classifier' : {
-          #      'model': DecisionTreeClassifier(),
-          #      'params': {
-          #           'max_depth': [3, None],
-          #           "min_samples_leaf": np.arange(1,9),
-          #           "criterion": ["gini", "entropy"]
-                    
-          #      }
-          # },
-          # 'svm': {
-          #      'model': svm.SVC(),
-          #      'params' : {
-          #           'C': np.arange(1,7),
-          #           "gamma": [0.01, 1, 2, 3]
-          #      }  
-          # },
+          'decision_tree_classifier' : {
+               'model': DecisionTreeClassifier(),
+               'params': {
+                    'max_depth': [3, None],
+                    "min_samples_leaf": np.arange(1,9),
+                    "criterion": ["gini", "entropy"]
+               }
+          },
+          'svm': {
+               'model': svm.SVC(),
+               'params' : {
+                    'C': np.arange(1,7),
+                    "gamma": [0.01, 1, 2, 3]
+               }  
+          },
           'random_forest': {
                'model': RandomForestClassifier(),
                'params' : {
@@ -106,7 +111,7 @@ def ensemble_classifers(X_train_opinion, y_train_opinion, x_test_opinion, y_test
           if(model_name != "gradient_boost_X"):
                clf =  GridSearchCV(mp['model'], mp['params'], cv=5, return_train_score=False)
           else:
-               clf = RandomizedSearchCV(mp['model'], param_distributions = mp['params'] , n_iter=5, scoring = 'roc_auc',n_jobs=-1,cv=5,verbose=3)
+               clf = RandomizedSearchCV(mp['model'], param_distributions = mp['params'] , n_iter=5, scoring = 'accuracy',n_jobs=-1,cv=5,verbose=3)
           clf.fit(X_train_opinion, y_train_opinion)
           time_taken = timer(start_time)
 
@@ -120,8 +125,7 @@ def ensemble_classifers(X_train_opinion, y_train_opinion, x_test_opinion, y_test
           print("Finished ", model_name, " best_score: ", clf.best_score_, " best_params ", clf.best_params_)
 
      df = pd.DataFrame(scores,columns=['model','best_score_train','best_params_train'])
-     print(df)      
-     opinion_classifier = XGBClassifier(min_child_weight = 1, max_depth= 6, learning_rate= 0.2, gamma= 0.2, colsample_bytree = 0.5)
+     opinion_classifier = LogisticRegression(C=1)
      opinion_classifier.fit(X_train_opinion, y_train_opinion)
      print(opinion_classifier.score(x_test_opinion, np.array(y_test_opinion)))   
      confusion_matrix_model(opinion_classifier, y_test_opinion, x_test_opinion)

@@ -76,14 +76,12 @@ def wordCloudSentiment(x, y, pos):
         data_array = data[data['Sentiment'] == 0]
     else:
         data_array = data[data['Sentiment'] == 1]
-    print(data_array)
     plt.figure(figsize = (20,20))
     wc = WordCloud(max_words = 1000 , width = 1600 , height = 800).generate(" ".join(np.asarray(data_array["Text"])))
     if pos:
         plt.title("Positive")
     else:
         plt.title("Negative")
-    print("here")
     plt.imshow(wc)
     plt.show()
 
