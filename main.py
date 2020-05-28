@@ -9,6 +9,14 @@ import tensorflow as tf
 import models
 import datasets
 import download_data
+import pandas as pd
+from models import ensemble_classifers
+from sklearn.metrics import classification_report
+import matplotlib.pyplot as plt
+
+
+def run_simple_models(x_train, y_train, x_test, y_test):
+    ensemble_classifers(x_train, y_train, x_test, y_test)
 
 
 def build_lstm_model(num_features,
@@ -133,21 +141,6 @@ def run_lstm():
             # Rebuild model
             lstm_model = build_lstm_model(num_features=max_features)
 
-    # # Train on IMDB dataset
-    # if train_imdb:
-    #     # Train and evaluate model
-    #     train_model(lstm_model, x_train_imdb, y_train_imdb, x_test_imdb, y_test_imdb)
-    #
-    #     if not train_in_sequence:
-    #         lstm_loss_imdb, lstm_acc_imdb = eval_model(lstm_model, x_test_imdb, y_test_imdb)
-    #
-    #         # Show results
-    #         print('Test loss IMDB:', lstm_loss_imdb)
-    #         print('Test accuracy IMDB:', lstm_acc_imdb)
-    #
-    #         # Rebuild model
-    #         lstm_model = build_lstm_model(num_features=max_features)
-
     if train_in_sequence:
         # Evaluate model on assigned eval set
         lstm_loss, lstm_acc = eval_model(lstm_model, x_eval, y_eval)
@@ -157,14 +150,22 @@ def run_lstm():
         print('Test Accuracy:', lstm_acc)
 
 
+def run_simple():
+    if train_140:
+        run_simple_models(x_train_140, y_train_140, x_test_140, y_test_140)
+
+
 if __name__ == "__main__":
     # ----- SWITCHES -----
 
-    # Models to train
-    model_LSTM = True
+    # RNNs
+    model_LSTM = False
     model_GRU = False
 
     train_in_sequence = True  # Train model on multiple datasets, instead of resetting and training seperately
+
+    # Simple Classifiers
+    simple_classifiers = True
 
     # Datasets to train model on
     train_140 = True  # Train selected models on sentiment 140 dataset
@@ -177,10 +178,10 @@ if __name__ == "__main__":
         # Download all files in shared data folder
         download_data.download_from_drive(file_names=['sentiment140.zip'])
 
-    # Unzip each zip saved in local data folder
-    download_data.unzip_data()
+        # Unzip each zip saved in local data folder
+        download_data.unzip_data()
 
-    print("Data organised")
+        print("Data organised")
 
     pathlib.Path("figures/RNN").mkdir(parents=True, exist_ok=True)
     pathlib.Path("logs").mkdir(parents=True, exist_ok=True)
@@ -188,7 +189,7 @@ if __name__ == "__main__":
     # ----- LOAD DATA -----
 
     # Data parameters
-    num_rows = 100000  # Number of rows to load from data
+    num_rows = 30000  # Number of rows to load from data
     max_features = 20000  # Maximum number of features (words) to process
     maxlen = 100  # Maximum length of sequences - all sequences will be cut or padded to this length
 
@@ -199,16 +200,10 @@ if __name__ == "__main__":
                                                            num_words=max_features,
                                                            num_rows=num_rows,
                                                            maxlen=maxlen,
+                                                           simple_classifier=simple_classifiers,
                                                            test_split=0.2,
                                                            seed=69)
     print(" Done")
-
-    # IMDB
-    # print("Loading IMDB...", end="")
-    # (x_train_imdb, y_train_imdb), \
-    # (x_test_imdb, y_test_imdb) = datasets.load_imdb(num_words=max_features,
-    #                                                 maxlen=maxlen)
-    # print(" Done")
 
     # ----- TRAINING -----
 
@@ -223,3 +218,6 @@ if __name__ == "__main__":
     # Run GRU modelling
     if model_GRU:
         pass
+
+    if simple_classifiers:
+        run_simple()
