@@ -133,20 +133,20 @@ def run_lstm():
             # Rebuild model
             lstm_model = build_lstm_model(num_features=max_features)
 
-    # Train on IMDB dataset
-    if train_imdb:
-        # Train and evaluate model
-        train_model(lstm_model, x_train_imdb, y_train_imdb, x_test_imdb, y_test_imdb)
-
-        if not train_in_sequence:
-            lstm_loss_imdb, lstm_acc_imdb = eval_model(lstm_model, x_test_imdb, y_test_imdb)
-
-            # Show results
-            print('Test loss IMDB:', lstm_loss_imdb)
-            print('Test accuracy IMDB:', lstm_acc_imdb)
-
-            # Rebuild model
-            lstm_model = build_lstm_model(num_features=max_features)
+    # # Train on IMDB dataset
+    # if train_imdb:
+    #     # Train and evaluate model
+    #     train_model(lstm_model, x_train_imdb, y_train_imdb, x_test_imdb, y_test_imdb)
+    #
+    #     if not train_in_sequence:
+    #         lstm_loss_imdb, lstm_acc_imdb = eval_model(lstm_model, x_test_imdb, y_test_imdb)
+    #
+    #         # Show results
+    #         print('Test loss IMDB:', lstm_loss_imdb)
+    #         print('Test accuracy IMDB:', lstm_acc_imdb)
+    #
+    #         # Rebuild model
+    #         lstm_model = build_lstm_model(num_features=max_features)
 
     if train_in_sequence:
         # Evaluate model on assigned eval set
@@ -168,7 +168,6 @@ if __name__ == "__main__":
 
     # Datasets to train model on
     train_140 = True  # Train selected models on sentiment 140 dataset
-    train_imdb = True  # Train selected models on keras imdb dataset
 
     # ----- SETUP -----
 
@@ -205,13 +204,12 @@ if __name__ == "__main__":
     print(" Done")
 
     # IMDB
-    print("Loading IMDB...", end="")
-    (x_train_imdb, y_train_imdb), \
-    (x_test_imdb, y_test_imdb) = datasets.load_imdb(num_words=max_features,
-                                                    maxlen=maxlen)
-    print(" Done")
+    # print("Loading IMDB...", end="")
+    # (x_train_imdb, y_train_imdb), \
+    # (x_test_imdb, y_test_imdb) = datasets.load_imdb(num_words=max_features,
+    #                                                 maxlen=maxlen)
+    # print(" Done")
 
-    print(type(x_train_imdb))
     # ----- TRAINING -----
 
     # Training parameters
