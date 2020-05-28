@@ -99,8 +99,8 @@ def preprocess(x_train, x_test, y_train, num_words, maxlen, simple_classifier):
     # Apply specialised preprocessing to each text item
     x_train = np.array([preprocess_text(x) for x in x_train])
     x_test = np.asarray([preprocess_text(x) for x in x_test])
-    wordCloudSentiment(x_train, y_train, False)
-    wordCloudSentiment(x_train, y_train, True)
+    # wordCloudSentiment(x_train, y_train, False)
+    # wordCloudSentiment(x_train, y_train, True)
 
     # Use keras to tokenize words
     if simple_classifier:

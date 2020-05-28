@@ -13,7 +13,7 @@ import pandas as pd
 from models import ensemble_classifers
 from sklearn.metrics import classification_report
 import matplotlib.pyplot as plt
-
+from models import confusion_matrix_model
 
 def run_simple_models(x_train, y_train, x_test, y_test):
     ensemble_classifers(x_train, y_train, x_test, y_test)
@@ -66,6 +66,55 @@ def build_lstm_model(num_features,
     return lstm_model
 
 
+
+
+def build_gru_model(num_features,
+                     embedding_size=None,
+                     kernel_size=None,
+                     filters=None,
+                     pool_size=None,
+                     gru_output_size=None):
+    """
+    Builds and compiles an GRU model with the provided hyper-parameters
+    Args:
+        num_features:
+        embedding_size:
+        kernel_size:
+        filters:
+        pool_size:
+        lstm_output_size:
+
+    Returns:
+
+    """
+    # Embedding
+    if embedding_size is None:
+        embedding_size = 64
+
+    # Convolution
+    if kernel_size is None:
+        kernel_size = 5
+    if filters is None:
+        filters = 64
+    if pool_size is None:
+        pool_size = 4
+
+    # GRU
+    if gru_output_size is None:
+        gru_output_size = 70
+
+    print('Build model...')
+
+    gru_model = models.gru(num_features,
+                             embedding_size=embedding_size,
+                             kernel_size=kernel_size,
+                             filters=filters,
+                             pool_size=pool_size,
+                             gru_output_size=gru_output_size)
+
+    return gru_model
+
+
 def train_model(model, x_train, y_train, x_test, y_test,
                 epochs=None, batch_size=None):
     """
@@ -114,7 +163,7 @@ def eval_model(model, x_test, y_test, batch_size=None):
         batch_size = 128
 
     loss, acc = model.evaluate(x_test, y_test, batch_size=batch_size)
-
+    confusion_matrix_model(model, y_test, x_test)
     return loss, acc
 
 
@@ -144,10 +193,39 @@ def run_lstm():
     if train_in_sequence:
         # Evaluate model on assigned eval set
         lstm_loss, lstm_acc = eval_model(lstm_model, x_eval, y_eval)
-
         # Show results
         print('Test Loss:', lstm_loss)
         print('Test Accuracy:', lstm_acc)
+def run_gru():
+    """"""
+    # Build GRU model
+    gru_model = build_gru_model(num_features=max_features)
+
+    # Assign data to evaluate model (if training in sequence)
+    x_eval, y_eval = x_test_140, y_test_140
+
+    # Train on sentiment 140 dataset
+    if train_140:
+        # Train and evaluate model
+        train_model(gru_model, x_train_140, y_train_140, x_test_140, y_test_140, epochs, batch_size)
+
+        if not train_in_sequence:
+            gru_loss_140, gru_acc_140 = eval_model(gru_model, x_test_140, y_test_140)
+
+            # Show results
+            print('Test loss 140:', gru_loss_140)
+            print('Test accuracy 140:', gru_acc_140)
+
+            # Rebuild model
+            gru_model = build_gru_model(num_features=max_features)
+
+    if train_in_sequence:
+        # Evaluate model on assigned eval set
+        gru_loss,  gru_acc = eval_model(gru_model, x_eval, y_eval)
+
+        # Show results
+        print('Test Loss:', gru_loss)
+        print('Test Accuracy:', gru_acc)
 
 
 def run_simple():
@@ -160,12 +238,12 @@ if __name__ == "__main__":
 
     # RNNs
     model_LSTM = False
-    model_GRU = False
+    model_GRU = True
 
     train_in_sequence = True  # Train model on multiple datasets, instead of resetting and training seperately
 
     # Simple Classifiers
-    simple_classifiers = True
+    simple_classifiers = False
 
     # Datasets to train model on
     train_140 = True  # Train selected models on sentiment 140 dataset
@@ -217,7 +295,8 @@ if __name__ == "__main__":
 
     # Run GRU modelling
     if model_GRU:
-        pass
+        run_gru()
+
 
     if simple_classifiers:
         run_simple()
