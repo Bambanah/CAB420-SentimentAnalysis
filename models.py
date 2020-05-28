@@ -2,7 +2,7 @@ import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout
 from tensorflow.keras.layers import Embedding
-from tensorflow.keras.layers import LSTM
+from tensorflow.keras.layers import LSTM, GRU
 from tensorflow.keras.layers import Conv1D, MaxPooling1D
 from sklearn import svm
 from sklearn.ensemble import RandomForestClassifier
@@ -132,6 +132,48 @@ def ensemble_classifers(X_train_opinion, y_train_opinion, x_test_opinion, y_test
     print(opinion_classifier.score(x_test_opinion, np.array(y_test_opinion)))
     confusion_matrix_model(opinion_classifier, y_test_opinion, x_test_opinion)
 
+
+def gru(vocab_size,
+         embedding_size=128,
+         filters=64,
+         pool_size=None,
+         kernel_size=5,
+         lstm_output_size=70):
+    model = Sequential()
+
+    model.add(Embedding(vocab_size, embedding_size))
+    model.add(Dropout(0.2))
+
+    model.add(Conv1D(filters,
+                     kernel_size,
+                     padding='valid',
+                     activation='relu',
+                     strides=1))
+    model.add(MaxPooling1D(pool_size=pool_size))
+
+    model.add(GRU(lstm_output_size, return_sequences=True))
+    model.add(Dropout(0.2))
+
+    model.add(GRU(lstm_output_size))
+    model.add(Dropout(0.2))
+
+    model.add(Dense(32, activation='relu'))
+    model.add(Dropout(0.2))
+
+    model.add(Dense(1, activation='sigmoid'))
+
+    opt = tf.keras.optimizers.Adam(lr=1e-3, decay=1e-5)
+
+    metrics = ['acc']
+
+    model.compile(loss='binary_crossentropy',
+                  optimizer=opt,
+                  metrics=metrics)
+
+    plot_model(model, to_file="figures/RNN/GRU_design.png", rankdir="TB")  # TB = Vertical, LR = horizontal
+    # print(model.summary())
+
+    return 
 
 def lstm(vocab_size,
          embedding_size=128,
