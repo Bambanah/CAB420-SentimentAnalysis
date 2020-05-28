@@ -23,21 +23,40 @@ from datetime import datetime
 from sklearn.metrics import plot_confusion_matrix
 import scikitplot as skplt
 from tensorflow.keras.utils import plot_model
+import os
+from sklearn.metrics import classification_report, confusion_matrix
+os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
 
+def confusion_matrix_model(opinion_classifier, y_test_opinion, x_test_opinion, simple = False):
+     if simple:
+          disp = plot_confusion_matrix(opinion_classifier, x_test_opinion, y_test_opinion,
+                                        display_labels=['negative', 'positive'],
+                                        cmap=plt.cm.Blues,
+                                        normalize="true")
+          disp.ax_.set_title("Normalized confusion matrix")
+          print("Normalized confusion matrix")
+          print(disp.confusion_matrix)
+          plt.show()
+          skplt.metrics.plot_roc_curve(y_test_opinion, opinion_classifier.predict(x_test_opinion))
+          plt.show()
 
-def confusion_matrix_model(opinion_classifier, y_test_opinion, x_test_opinion):
-    disp = plot_confusion_matrix(opinion_classifier, x_test_opinion, y_test_opinion,
-                                 display_labels=['negative', 'positive'],
-                                 cmap=plt.cm.Blues,
-                                 normalize="true")
-    disp.ax_.set_title("Normalized confusion matrix")
-
-    print("Normalized confusion matrix")
-    print(disp.confusion_matrix)
-    plt.show()
-    skplt.metrics.plot_roc_curve(y_test_opinion, opinion_classifier.predict_proba(x_test_opinion))
-    plt.show()
-
+     else:
+          disp = confusion_matrix(y_test_opinion, opinion_classifier.predict_classes(x_test_opinion))
+          print(disp)
+          from sklearn.metrics import roc_curve
+          y_pred_keras = opinion_classifier.predict(x_test_opinion).ravel()
+          fpr_keras, tpr_keras, thresholds_keras = roc_curve(y_test_opinion, y_pred_keras)
+          from sklearn.metrics import auc
+          auc_keras = auc(fpr_keras, tpr_keras)
+          plt.figure(1)
+          plt.plot([0, 1], [0, 1], 'k--')
+          plt.plot(fpr_keras, tpr_keras, label='Keras (area = {:.3f})'.format(auc_keras))
+          plt.xlabel('False positive rate')
+          plt.ylabel('True positive rate')
+          plt.title('ROC curve')
+          plt.legend(loc='best')
+          plt.show()
+          
 
 def timer(start_time=None):
     if not start_time:
@@ -138,7 +157,7 @@ def gru(vocab_size,
          filters=64,
          pool_size=None,
          kernel_size=5,
-         lstm_output_size=70):
+         gru_output_size=70):
     model = Sequential()
 
     model.add(Embedding(vocab_size, embedding_size))
@@ -151,10 +170,10 @@ def gru(vocab_size,
                      strides=1))
     model.add(MaxPooling1D(pool_size=pool_size))
 
-    model.add(GRU(lstm_output_size, return_sequences=True))
+    model.add(GRU(gru_output_size, return_sequences=True))
     model.add(Dropout(0.2))
 
-    model.add(GRU(lstm_output_size))
+    model.add(GRU(gru_output_size))
     model.add(Dropout(0.2))
 
     model.add(Dense(32, activation='relu'))
@@ -173,7 +192,7 @@ def gru(vocab_size,
     plot_model(model, to_file="figures/RNN/GRU_design.png", rankdir="TB")  # TB = Vertical, LR = horizontal
     # print(model.summary())
 
-    return 
+    return model
 
 def lstm(vocab_size,
          embedding_size=128,

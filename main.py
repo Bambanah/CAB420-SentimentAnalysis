@@ -13,7 +13,7 @@ import pandas as pd
 from models import ensemble_classifers
 from sklearn.metrics import classification_report
 import matplotlib.pyplot as plt
-
+from models import confusion_matrix_model
 
 def run_simple_models(x_train, y_train, x_test, y_test):
     ensemble_classifers(x_train, y_train, x_test, y_test)
@@ -75,7 +75,7 @@ def build_gru_model(num_features,
                      pool_size=None,
                      gru_output_size=None):
     """
-    Builds and compiles an LSTM model with the provided hyper-parameters
+    Builds and compiles an GRU model with the provided hyper-parameters
     Args:
         num_features:
         embedding_size:
@@ -99,7 +99,7 @@ def build_gru_model(num_features,
     if pool_size is None:
         pool_size = 4
 
-    # LSTM
+    # GRU
     if gru_output_size is None:
         gru_output_size = 70
 
@@ -163,7 +163,7 @@ def eval_model(model, x_test, y_test, batch_size=None):
         batch_size = 128
 
     loss, acc = model.evaluate(x_test, y_test, batch_size=batch_size)
-
+    confusion_matrix_model(model, y_test, x_test)
     return loss, acc
 
 
@@ -193,13 +193,12 @@ def run_lstm():
     if train_in_sequence:
         # Evaluate model on assigned eval set
         lstm_loss, lstm_acc = eval_model(lstm_model, x_eval, y_eval)
-
         # Show results
         print('Test Loss:', lstm_loss)
         print('Test Accuracy:', lstm_acc)
 def run_gru():
     """"""
-    # Build LSTM model
+    # Build GRU model
     gru_model = build_gru_model(num_features=max_features)
 
     # Assign data to evaluate model (if training in sequence)
