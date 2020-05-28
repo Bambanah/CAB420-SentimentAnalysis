@@ -5,10 +5,11 @@ from tensorflow.keras.layers import Embedding
 from tensorflow.keras.layers import LSTM
 from tensorflow.keras.layers import Conv1D, MaxPooling1D
 
+from tensorflow.keras.utils import plot_model
+
 
 def lstm(vocab_size,
          embedding_size=128,
-         maxlen=100,
          filters=64,
          pool_size=None,
          kernel_size=5,
@@ -44,6 +45,7 @@ def lstm(vocab_size,
                   optimizer=opt,
                   metrics=metrics)
 
+    plot_model(model, to_file="figures/RNN/LSTM_design.png", rankdir="TB")  # TB = Vertical, LR = horizontal
     # print(model.summary())
 
     return model
