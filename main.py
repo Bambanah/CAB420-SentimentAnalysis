@@ -238,12 +238,12 @@ if __name__ == "__main__":
 
     # RNNs
     model_LSTM = False
-    model_GRU = True
+    model_GRU = False
 
     train_in_sequence = True  # Train model on multiple datasets, instead of resetting and training seperately
 
     # Simple Classifiers
-    simple_classifiers = False
+    simple_classifiers = True
 
     # Datasets to train model on
     train_140 = True  # Train selected models on sentiment 140 dataset
