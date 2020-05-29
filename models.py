@@ -28,6 +28,7 @@ from sklearn.metrics import classification_report, confusion_matrix
 os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
 
 def confusion_matrix_model(opinion_classifier, y_test_opinion, x_test_opinion, simple = False):
+     positive_bias_threshold = None
      if simple:
           disp = plot_confusion_matrix(opinion_classifier, x_test_opinion, y_test_opinion,
                                         display_labels=['negative', 'positive'],
@@ -39,13 +40,13 @@ def confusion_matrix_model(opinion_classifier, y_test_opinion, x_test_opinion, s
           plt.show()
           skplt.metrics.plot_roc_curve(y_test_opinion, opinion_classifier.predict(x_test_opinion))
           plt.show()
-
      else:
-          disp = confusion_matrix(y_test_opinion, opinion_classifier.predict_classes(x_test_opinion))
-          print(disp)
           from sklearn.metrics import roc_curve
           y_pred_keras = opinion_classifier.predict(x_test_opinion).ravel()
           fpr_keras, tpr_keras, thresholds_keras = roc_curve(y_test_opinion, y_pred_keras)
+          fnr = 1 - tpr_keras
+          eer_threshold = fpr_keras[np.nanargmin(np.absolute((fnr - fpr_keras)))]
+          print(eer_threshold)
           from sklearn.metrics import auc
           auc_keras = auc(fpr_keras, tpr_keras)
           plt.figure(1)
@@ -56,7 +57,27 @@ def confusion_matrix_model(opinion_classifier, y_test_opinion, x_test_opinion, s
           plt.title('ROC curve')
           plt.legend(loc='best')
           plt.show()
+          disp = confusion_matrix(y_test_opinion, opinion_classifier.predict_classes(x_test_opinion))
+          print(disp)
           
+          print(len(y_pred_keras))
+          positive_bias_threshold = eer_threshold - 0.02
+          y_pred_keras = np.where(y_pred_keras > positive_bias_threshold, 1, y_pred_keras)
+          y_pred_keras = np.where(y_pred_keras < positive_bias_threshold, 0, y_pred_keras)
+          print(y_pred_keras)
+          print(len(y_pred_keras))
+
+          cm = confusion_matrix(y_test_opinion, y_pred_keras)
+          fig = plt.figure()
+          ax = fig.add_subplot(111)
+          cax = ax.matshow(cm)
+          plt.title('Confusion matrix of the classifer with the threshold changed to classifer more neutral text as positive')
+          fig.colorbar(cax)
+          plt.xlabel('Predicted')
+          plt.ylabel('True')
+          plt.show()
+          print(disp)
+     return positive_bias_threshold
 
 def timer(start_time=None):
     if not start_time:
