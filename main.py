@@ -1,19 +1,14 @@
 import os
+import pathlib
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-import pathlib
-
-import tensorflow as tf
+from models import ensemble_classifers
+import pandas as pd
 
 import models
 import datasets
 import download_data
-import pandas as pd
-from models import ensemble_classifers
-from sklearn.metrics import classification_report
-import matplotlib.pyplot as plt
-from models import confusion_matrix_model
 
 def run_simple_models(x_train, y_train, x_test, y_test):
     ensemble_classifers(x_train, y_train, x_test, y_test)
@@ -237,8 +232,8 @@ if __name__ == "__main__":
     # ----- SWITCHES -----
 
     # RNNs
-    model_LSTM = False
-    model_GRU = True
+    model_LSTM = True
+    model_GRU = False
 
     train_in_sequence = True  # Train model on multiple datasets, instead of resetting and training seperately
 
@@ -246,7 +241,10 @@ if __name__ == "__main__":
     simple_classifiers = False
 
     # Datasets to train model on
-    train_140 = True  # Train selected models on sentiment 140 dataset
+    train_140 = False  # Train selected models on sentiment 140 dataset
+
+    # Predict covid sentiment
+    predict_covid = True
 
     # ----- SETUP -----
 
@@ -267,21 +265,52 @@ if __name__ == "__main__":
     # ----- LOAD DATA -----
 
     # Data parameters
+    data_dir = "data"
+
     num_rows = 30000  # Number of rows to load from data
+    seed = 69
+    test_split = 0.2
+
     max_features = 20000  # Maximum number of features (words) to process
     maxlen = 100  # Maximum length of sequences - all sequences will be cut or padded to this length
 
-    # Sentiment 140
-    print("Loading Sentiment 140...", end="")
-    (x_train_140, y_train_140), \
-    (x_test_140, y_test_140) = datasets.load_sentiment_140(data_dir="data",
-                                                           num_words=max_features,
-                                                           num_rows=num_rows,
-                                                           maxlen=maxlen,
-                                                           simple_classifier=simple_classifiers,
-                                                           test_split=0.2,
-                                                           seed=69)
+    print("Loading corpus for vectorizer...", end="")
+    if predict_covid:
+
+        # Check if exists
+        if os.path.isfile(data_dir + "/covid19-tweets/dataframe.csv"):
+            covid_data = pd.read_csv(data_dir + "/covid19-tweets/dataframe.csv")
+        else:
+            covid_data = datasets.load_covid(num_rows=num_rows, seed=seed)
+            covid_data.to_csv(data_dir + "/covid19-tweets/dataframe.csv")
+        corpus = covid_data["text"]
+    else:
+        # Load another corpus here if not predicting covid sentiment
+        corpus = []
     print(" Done")
+
+    # Create vectorizer
+    print("Creating vectorizer...", end="")
+    vectorizer = datasets.create_vectorizer(corpus)
+    print(" Done")
+
+    if train_140:
+        # Sentiment 140
+        print("Loading Sentiment 140...", end="")
+        (x_train_140, y_train_140), \
+        (x_test_140, y_test_140) = datasets.load_sentiment_140(data_dir=data_dir,
+                                                               num_rows=num_rows,
+                                                               maxlen=maxlen,
+                                                               simple_classifier=simple_classifiers,
+                                                               test_split=test_split,
+                                                               seed=seed)
+        print(" Done")
+
+    if predict_covid:
+        # Covid-19 Tweets
+        print("Loading COVID-19 Tweets...", end="")
+        processed_covid = datasets.preprocess(vectorizer, corpus, maxlen)
+        print(" Done")
 
     # ----- TRAINING -----
 
