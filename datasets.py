@@ -217,7 +217,7 @@ def load_covid(data_dir="data", num_rows=None, seed=100):
     n = sum(1 for line in open(files_to_load[0], encoding="utf8")) - 1  # number of records in file (excludes header)
     skip = sorted(
         random.sample(range(1, n + 1),
-                      n - rows_from_each))  # the 0-indexed header will not be included in the skip list
+                      n - rows_from_each * 3))  # the 0-indexed header will not be included in the skip list
     covid_data = pd.read_csv(files_to_load[0], skiprows=skip)
     covid_data = covid_data[covid_data.lang == 'en']
 
