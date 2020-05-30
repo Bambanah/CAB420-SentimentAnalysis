@@ -3,7 +3,7 @@ import pathlib
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-from models import ensemble_classifers
+from models import ensemble_classifers, logistic_regression_covid
 import pandas as pd
 import numpy as np
 
@@ -15,6 +15,8 @@ import download_data
 def run_simple_models(x_train, y_train, x_test, y_test):
     ensemble_classifers(x_train, y_train, x_test, y_test)
 
+def run_simple_models_covid(x_train, y_train, x_test_covid):
+    logistic_regression_covid(x_train, y_train, x_test_covid, dates)
 
 def build_lstm_model(num_features,
                      embedding_size=None,
@@ -239,13 +241,13 @@ if __name__ == "__main__":
     # ----- SWITCHES -----
 
     # RNNs
-    model_LSTM = True
+    model_LSTM = False
     model_GRU = False
 
     train_in_sequence = True  # Train model on multiple datasets, instead of resetting and training seperately
 
     # Simple Classifiers
-    simple_classifiers = False
+    simple_classifiers = True
 
     # Datasets to train model on
     train_140 = True  # Train selected models on sentiment 140 dataset
@@ -293,13 +295,13 @@ if __name__ == "__main__":
         covid_data.to_csv(data_dir + "/covid19-tweets/dataframe.csv")
     corpus = covid_data["text"]
     dates = covid_data["created_at"]
-
-    print("Loaded %d rows from covid data." % (len(corpus)))
+    print(dates)
+    print("Loaded %d rows from covid data." % (len(corpus) - 1))
     print(" Done")
 
     # Create vectorizer
     print("Creating vectorizer...", end="")
-    vectorizer = datasets.create_vectorizer(corpus, max_features=max_features)
+    vectorizer = datasets.create_vectorizer(corpus, max_features=max_features, simple_classifier = simple_classifiers)
     print(" Done")
 
     if train_140:
@@ -317,7 +319,7 @@ if __name__ == "__main__":
 
     # Covid-19 Tweets
     print("Loading COVID-19 Tweets...", end="")
-    processed_covid = datasets.preprocess(vectorizer, corpus, maxlen)
+    processed_covid = datasets.preprocess(vectorizer, corpus, maxlen, simple_classifier = simple_classifiers)
     print(" Done")
 
     # ----- TRAINING -----
@@ -336,3 +338,4 @@ if __name__ == "__main__":
 
     if simple_classifiers:
         run_simple()
+        run_simple_models_covid(x_train_140, y_train_140,processed_covid,)
