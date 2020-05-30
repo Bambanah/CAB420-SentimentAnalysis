@@ -24,39 +24,106 @@ from sklearn.metrics import plot_confusion_matrix
 import scikitplot as skplt
 from tensorflow.keras.utils import plot_model
 import os
+from sklearn.metrics import roc_curve
+from sklearn.metrics import roc_curve
+
 from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.metrics import average_precision_score, recall_score
+from sklearn.metrics import f1_score
 os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
 
-def confusion_matrix_model(opinion_classifier, y_test_opinion, x_test_opinion, simple = False):
+def confusion_matrix_model(opinion_classifier, y_test_opinion, x_test_opinion, simple = False, model_name = None):
      if simple:
-          disp = plot_confusion_matrix(opinion_classifier, x_test_opinion, y_test_opinion,
-                                        display_labels=['negative', 'positive'],
-                                        cmap=plt.cm.Blues,
-                                        normalize="true")
-          disp.ax_.set_title("Normalized confusion matrix")
-          print("Normalized confusion matrix")
-          print(disp.confusion_matrix)
-          plt.show()
-          skplt.metrics.plot_roc_curve(y_test_opinion, opinion_classifier.predict(x_test_opinion))
-          plt.show()
+        average_precision = average_precision_score(y_test_opinion, opinion_classifier.predict(x_test_opinion))
+        print('Average precision score: {0:0.2f}'.format(average_precision))
+        recall = recall_score(y_test_opinion, opinion_classifier.predict(x_test_opinion), average='micro')
+        print("Recall score is: {0:0.2f}" .format(recall))
+        fscore = f1_score(y_test_opinion, opinion_classifier.predict(x_test_opinion), average='micro')
+        print("F1 score is: " + str(fscore))
+        disp = plot_confusion_matrix(opinion_classifier, x_test_opinion, y_test_opinion,
+                                    display_labels=['negative', 'positive'],
+                                    cmap=plt.cm.Blues,
+                                    normalize="true")
+        title = "Normalized confusion matrix " + model_name
+        disp.ax_.set_title(title)
+        print("Normalized confusion matrix")
+        print(disp.confusion_matrix)
+        plt.show()
+        try:
+            plt.savefig(disp + 'confusion_matrix.png')
+        except:
+            pass
+
+            # skplt.metrics.plot_roc_curve(y_test_opinion, opinion_classifier.predict(x_test_opinion))
+            # plt.show()
+            # plt.savefig(model_name, 'roc.png')
+        y_pred = opinion_classifier.predict_proba(x_test_opinion)[::,1]
+        from sklearn.metrics import roc_curve
+
+        fpr, tpr, thresholds = roc_curve(y_test_opinion, y_pred)
+        fnr_simple = 1 - tpr
+        eer_threshold = fpr[np.nanargmin(np.absolute((fnr_simple - fpr)))]
+        print(eer_threshold)
+        positive_bias_threshold = eer_threshold - 0.02
+        from sklearn.metrics import auc
+        auc = auc(fpr, tpr)
+        plt.figure(1)
+        plt.plot([0, 1], [0, 1], 'k--')
+        plt.plot(fpr, tpr, label='Classifer (area = ' + str(auc) + ")")
+        plt.xlabel('False positive rate')
+        plt.ylabel('True positive rate')
+        plt.title('ROC curve ' + model_name)
+        plt.legend(loc='best')
+        plt.show()
+        
 
      else:
-          disp = confusion_matrix(y_test_opinion, opinion_classifier.predict_classes(x_test_opinion))
-          print(disp)
-          from sklearn.metrics import roc_curve
-          y_pred_keras = opinion_classifier.predict(x_test_opinion).ravel()
-          fpr_keras, tpr_keras, thresholds_keras = roc_curve(y_test_opinion, y_pred_keras)
-          from sklearn.metrics import auc
-          auc_keras = auc(fpr_keras, tpr_keras)
-          plt.figure(1)
-          plt.plot([0, 1], [0, 1], 'k--')
-          plt.plot(fpr_keras, tpr_keras, label='Keras (area = {:.3f})'.format(auc_keras))
-          plt.xlabel('False positive rate')
-          plt.ylabel('True positive rate')
-          plt.title('ROC curve')
-          plt.legend(loc='best')
-          plt.show()
-          
+        from sklearn.metrics import roc_curve
+        y_pred_keras = opinion_classifier.predict(x_test_opinion).ravel()
+        y_pred_keras_class = opinion_classifier.predict_classes(x_test_opinion).ravel()
+
+        fpr_keras, tpr_keras, thresholds_keras = roc_curve(y_test_opinion, y_pred_keras)
+        fnr = 1 - tpr_keras
+        eer_threshold = fpr_keras[np.nanargmin(np.absolute((fnr - fpr_keras)))]
+        print(eer_threshold)
+        from sklearn.metrics import auc
+        auc_keras = auc(fpr_keras, tpr_keras)
+        average_precision = average_precision_score(y_test_opinion, opinion_classifier.predict(x_test_opinion))
+        print('Average precision score: {0:0.2f}'.format(average_precision))
+        recall = recall_score(y_test_opinion, opinion_classifier.predict_classes(x_test_opinion), average='micro')
+        print("Recall score is: {0:0.2f}" .format(recall))
+        fscore = f1_score(y_test_opinion, opinion_classifier.predict_classes(x_test_opinion), average='micro')
+        print("F1 score is: " + str(fscore))
+        plt.figure(1)
+        plt.plot([0, 1], [0, 1], 'k--')
+        plt.plot(fpr_keras, tpr_keras, label='Keras (area = {:.3f})'.format(auc_keras))
+        plt.xlabel('False positive rate')
+        plt.ylabel('True positive rate')
+        plt.title('ROC curve')
+        plt.legend(loc='best')
+        plt.show()
+        disp = confusion_matrix(y_test_opinion, opinion_classifier.predict_classes(x_test_opinion))
+        print(disp)
+
+        print(len(y_pred_keras))
+        positive_bias_threshold = eer_threshold - 0.02
+        # y_pred_keras = np.where(y_pred_keras > positive_bias_threshold, 1, y_pred_keras)
+        # y_pred_keras = np.where(y_pred_keras < positive_bias_threshold, 0, y_pred_keras)
+        # print(y_pred_keras)
+        # print(len(y_pred_keras))
+
+        cm = confusion_matrix(y_test_opinion, y_pred_keras_class)
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        cax = ax.matshow(cm)
+        plt.title('Confusion matrix of the classifer')
+        fig.colorbar(cax)
+        plt.xlabel('Predicted')
+        plt.ylabel('True')
+        plt.show()
+        print(disp)
+     return positive_bias_threshold
+
 
 def timer(start_time=None):
     if not start_time:
@@ -71,23 +138,13 @@ def timer(start_time=None):
 
 
 def ensemble_classifers(X_train_opinion, y_train_opinion, x_test_opinion, y_test_opinion):
-    X_train_opinion = X_train_opinion[:30000]
-    y_train_opinion = y_train_opinion[:30000]
-    x_test_opinion = x_test_opinion[:30000]
-    y_test_opinion = y_test_opinion[:30000]
+    X_train_opinion = X_train_opinion[:10000]
+    y_train_opinion = y_train_opinion[:10000]
+    x_test_opinion = x_test_opinion[:10000]
+    y_test_opinion = y_test_opinion[:10000]
     max_depths = np.linspace(1, 15, 15, endpoint=True)
     min_samples_leafs = np.linspace(0.1, 0.5, 5, endpoint=True)
     model_params = {
-        # 'gradient_boost_X': {
-        #     'model': XGBClassifier(),
-        #     'params': {
-        #         "learning_rate": [0.05, 0.10, 0.15, 0.20, 0.25, 0.30],
-        #         "max_depth": [3, 4, 5, 6, 8, 10, 12, 15],
-        #         "min_child_weight": [1, 3, 5, 7],
-        #         "gamma": [0.0, 0.1, 0.2, 0.3, 0.4],
-        #         "colsample_bytree": [0.3, 0.4, 0.5, 0.7]
-        #     }
-        # },
         # 'decision_tree_classifier': {
         #     'model': DecisionTreeClassifier(),
         #     'params': {
@@ -97,10 +154,10 @@ def ensemble_classifers(X_train_opinion, y_train_opinion, x_test_opinion, y_test
         #     }
         # },
         # 'svm': {
-        #     'model': svm.SVC(),
+        #     'model': svm.SVC(probability=True),
         #     'params': {
-        #         'C': np.arange(1, 7),
-        #         "gamma": [0.01, 1, 2, 3]
+        #         'C':[2],
+        #         "gamma": [ 2 ]
         #     }
         # },
         # 'random_forest': {
@@ -128,14 +185,11 @@ def ensemble_classifers(X_train_opinion, y_train_opinion, x_test_opinion, y_test
 
         print("\nStarted ", model_name)
         start_time = timer(None)
-        if model_name != "gradient_boost_X":
-            clf = GridSearchCV(mp['model'], mp['params'], cv=5, return_train_score=False)
-        else:
-            clf = RandomizedSearchCV(mp['model'], param_distributions=mp['params'], n_iter=5, scoring='accuracy',
-                                     n_jobs=-1, cv=5, verbose=3)
+        clf = GridSearchCV(mp['model'], mp['params'], cv=5, return_train_score=False)
         clf.fit(X_train_opinion, y_train_opinion)
         time_taken = timer(start_time)
-
+        positive_bias_threshold = confusion_matrix_model(clf, y_test_opinion, x_test_opinion, True, model_name)
+        print('Positive bias threshold: ', positive_bias_threshold)
         scores.append({
             'model': model_name,
             'best_score_train': clf.best_score_,
@@ -149,8 +203,6 @@ def ensemble_classifers(X_train_opinion, y_train_opinion, x_test_opinion, y_test
     opinion_classifier = LogisticRegression(C=1)
     opinion_classifier.fit(X_train_opinion, y_train_opinion)
     print(opinion_classifier.score(x_test_opinion, np.array(y_test_opinion)))
-    confusion_matrix_model(opinion_classifier, y_test_opinion, x_test_opinion)
-
 
 def gru(vocab_size,
          embedding_size=128,
