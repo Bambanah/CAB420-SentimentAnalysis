@@ -164,7 +164,8 @@ def eval_model(model, x_test, y_test, batch_size=None):
 
     loss, acc = model.evaluate(x_test, y_test, batch_size=batch_size)
     positive_bias_threshold = confusion_matrix_model(model, y_test, x_test)
-    return loss, acc, positive_bias_threshold
+    return loss, acc, positive_bias_threshold 
+
 
 
 def run_lstm():
@@ -187,17 +188,15 @@ def run_lstm():
             print('Test loss 140:', lstm_loss_140)
             print('Test accuracy 140:', lstm_acc_140)
             print('Positive bias threshold 140:', positive_bias_threshold)
-
-
             # Rebuild model
             lstm_model = build_lstm_model(num_features=max_features)
 
     if train_in_sequence:
         # Evaluate model on assigned eval set
-        lstm_loss, lstm_ac, positive_bias_threshold = eval_model(lstm_model, x_eval, y_eval)
+        lstm_loss, lstm_acc, positive_bias_threshold  = eval_model(lstm_model, x_eval, y_eval)
         # Show results
         print('Test Loss:', lstm_loss)
-        print('Test Accuracy:', lstm_ac)
+        print('Test Accuracy:', lstm_acc)
         print('Positive bias threshold: ', positive_bias_threshold)
 
 def run_gru():
@@ -220,7 +219,6 @@ def run_gru():
             print('Test loss 140:', gru_loss_140)
             print('Test accuracy 140:', gru_acc_140)
             print('Positive bias threshold 140:', positive_bias_threshold)
-
 
             # Rebuild model
             gru_model = build_gru_model(num_features=max_features)
@@ -246,12 +244,12 @@ if __name__ == "__main__":
 
     # RNNs
     model_LSTM = False
-    model_GRU = True
+    model_GRU = False
 
     train_in_sequence = True  # Train model on multiple datasets, instead of resetting and training seperately
 
     # Simple Classifiers
-    simple_classifiers = False
+    simple_classifiers = True
 
     # Datasets to train model on
     train_140 = True  # Train selected models on sentiment 140 dataset
