@@ -208,7 +208,6 @@ def load_covid(data_dir="data", num_rows=None, seed=100):
     # Load dataset from file
     file_dir = data_dir + "/covid19-tweets/2020-*.csv"
     files_to_load = glob.glob(file_dir)
-    print(files_to_load)
 
     rows_from_each = round(num_rows / len(files_to_load))
 
@@ -220,6 +219,7 @@ def load_covid(data_dir="data", num_rows=None, seed=100):
         random.sample(range(1, n + 1),
                       n - rows_from_each))  # the 0-indexed header will not be included in the skip list
     covid_data = pd.read_csv(files_to_load[0], skiprows=skip)
+    covid_data = covid_data[covid_data.lang == 'en']
 
     for file in files_to_load[1:]:
         print("Sampling {}".format(file))
@@ -230,18 +230,11 @@ def load_covid(data_dir="data", num_rows=None, seed=100):
                           n - rows_from_each))  # the 0-indexed header will not be included in the skip list
 
         df = pd.read_csv(file, skiprows=skip)
+        df = df[df.lang == 'en']  # Drop rows that aren't english
 
         covid_data = pd.concat([covid_data, df])
 
-    covid_data = covid_data[covid_data.lang == 'en']  # Drop rows that aren't english
-
-    # Shuffle order of rows
-    covid_data = covid_data.sample(frac=1, random_state=seed)
-
-    # Only grab num_rows rows from data
-    # How many rows of data to return. Default all
-    # if not num_rows:
-    #     num_rows = len(covid_data)
-    # covid_data = covid_data.iloc[:num_rows]
+    # Get rid of time in datetime column
+    covid_data['created_at'] = covid_data['created_at'].apply(lambda x: x.split("T")[0])
 
     return covid_data
