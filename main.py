@@ -248,9 +248,6 @@ if __name__ == "__main__":
     # Datasets to train model on
     train_140 = True  # Train selected models on sentiment 140 dataset
 
-    # Predict covid sentiment
-    predict_covid = True
-
     # ----- SETUP -----
 
     grab_data = False
@@ -281,19 +278,19 @@ if __name__ == "__main__":
 
     force_covid_reload = False
 
-    print("Loading corpus for vectorizer...", end="")
-    if predict_covid:
+    corpus = []
+    dates = []
 
-        # Check if exists
-        if os.path.isfile(data_dir + "/covid19-tweets/dataframe.csv") and not force_covid_reload:
-            covid_data = pd.read_csv(data_dir + "/covid19-tweets/dataframe.csv")
-        else:
-            covid_data = datasets.load_covid(num_rows=num_rows, seed=seed)
-            covid_data.to_csv(data_dir + "/covid19-tweets/dataframe.csv")
-        corpus = covid_data["text"]
+    print("Loading corpus for vectorizer...", end="")
+
+    # Check if exists
+    if os.path.isfile(data_dir + "/covid19-tweets/dataframe.csv") and not force_covid_reload:
+        covid_data = pd.read_csv(data_dir + "/covid19-tweets/dataframe.csv")
     else:
-        # Load another corpus here if not predicting covid sentiment
-        corpus = []
+        covid_data = datasets.load_covid(num_rows=num_rows, seed=seed)
+        covid_data.to_csv(data_dir + "/covid19-tweets/dataframe.csv")
+    corpus = covid_data["text"]
+    dates = covid_data["created_at"]
 
     print("Loaded %d rows from covid data." % (len(corpus) - 1))
     print(" Done")
@@ -316,19 +313,16 @@ if __name__ == "__main__":
                                                                seed=seed)
         print(" Done")
 
-    if predict_covid:
-        # Covid-19 Tweets
-        print("Loading COVID-19 Tweets...", end="")
-        processed_covid = datasets.preprocess(vectorizer, corpus, maxlen)
-        print(" Done")
+    # Covid-19 Tweets
+    print("Loading COVID-19 Tweets...", end="")
+    processed_covid = datasets.preprocess(vectorizer, corpus, maxlen)
+    print(" Done")
 
     # ----- TRAINING -----
 
     # Training parameters
     epochs = 1
     batch_size = 128
-
-    print(x_train_140)
 
     # Run LSTM Model
     if model_LSTM:
