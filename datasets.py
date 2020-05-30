@@ -15,6 +15,7 @@ nltk.download('wordnet')
 from tensorflow.keras.preprocessing import sequence
 from sklearn.feature_extraction.text import TfidfVectorizer
 import glob
+import random
 
 
 def preprocess_text(text):
@@ -92,7 +93,7 @@ def wordCloudSentiment(x, y, pos):
     plt.show()
 
 
-def create_vectorizer(corpus, simple_classifier=False):
+def create_vectorizer(corpus, max_features=20000, simple_classifier=False):
     # Use keras to tokenize words
     if simple_classifier:
         # Create Tfidf Vectorizer
@@ -102,7 +103,7 @@ def create_vectorizer(corpus, simple_classifier=False):
         vectorizer.fit(corpus)
     else:
         # Create Keras Tokenizer
-        vectorizer = preprocessing.text.Tokenizer()
+        vectorizer = preprocessing.text.Tokenizer(num_words=max_features)
 
         # Tokenize text data
         vectorizer.fit_on_texts(corpus)
@@ -132,8 +133,8 @@ def preprocess(vectorizer, text_arr, maxlen, simple_classifier=False):
     return text_arr
 
 
-def load_sentiment_140(data_dir="data",
-                       vectorizer=None,
+def load_sentiment_140(vectorizer,
+                       data_dir="data",
                        num_rows=None,
                        maxlen=None,
                        test_split=0.2,
@@ -203,28 +204,40 @@ def load_covid(data_dir="data", num_rows=None, seed=100):
         seed: 
 
     Returns:
-
     """
     # Load dataset from file
     file_dir = data_dir + "/covid19-tweets/2020-*.csv"
     files_to_load = glob.glob(file_dir)
     print(files_to_load)
 
+    rows_from_each = round(num_rows / len(files_to_load))
+
+    print("Loading {} rows from {} files".format(rows_from_each, len(files_to_load)))
+
     # Load first csv as initial dataframe
     covid_data = pd.read_csv(files_to_load[0])
 
     for file in files_to_load[1:]:
-        print("Loading ", file)
-        df = pd.read_csv(file)
+        print("Sampling {}".format(file))
+
+        n = sum(1 for line in open(file, encoding="utf8")) - 1  # number of records in file (excludes header)
+        skip = sorted(
+            random.sample(range(1, n + 1),
+                          n - rows_from_each))  # the 0-indexed header will not be included in the skip list
+
+        df = pd.read_csv(file, skiprows=skip)
+
         covid_data = pd.concat([covid_data, df])
+
+    covid_data = covid_data[covid_data.lang == 'en']  # Drop rows that aren't english
 
     # Shuffle order of rows
     covid_data = covid_data.sample(frac=1, random_state=seed)
 
     # Only grab num_rows rows from data
     # How many rows of data to return. Default all
-    if not num_rows:
-        num_rows = len(covid_data)
-    covid_data = covid_data.iloc[:num_rows]
+    # if not num_rows:
+    #     num_rows = len(covid_data)
+    # covid_data = covid_data.iloc[:num_rows]
 
     return covid_data

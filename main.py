@@ -5,10 +5,12 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 from models import ensemble_classifers
 import pandas as pd
+import numpy as np
 
 import models
 import datasets
 import download_data
+
 
 def run_simple_models(x_train, y_train, x_test, y_test):
     ensemble_classifers(x_train, y_train, x_test, y_test)
@@ -61,14 +63,12 @@ def build_lstm_model(num_features,
     return lstm_model
 
 
-
-
 def build_gru_model(num_features,
-                     embedding_size=None,
-                     kernel_size=None,
-                     filters=None,
-                     pool_size=None,
-                     gru_output_size=None):
+                    embedding_size=None,
+                    kernel_size=None,
+                    filters=None,
+                    pool_size=None,
+                    gru_output_size=None):
     """
     Builds and compiles an GRU model with the provided hyper-parameters
     Args:
@@ -101,11 +101,11 @@ def build_gru_model(num_features,
     print('Build model...')
 
     gru_model = models.gru(num_features,
-                             embedding_size=embedding_size,
-                             kernel_size=kernel_size,
-                             filters=filters,
-                             pool_size=pool_size,
-                             gru_output_size=gru_output_size)
+                           embedding_size=embedding_size,
+                           kernel_size=kernel_size,
+                           filters=filters,
+                           pool_size=pool_size,
+                           gru_output_size=gru_output_size)
 
     return gru_model
 
@@ -158,9 +158,8 @@ def eval_model(model, x_test, y_test, batch_size=None):
         batch_size = 128
 
     loss, acc = model.evaluate(x_test, y_test, batch_size=batch_size)
-    positive_bias_threshold = confusion_matrix_model(model, y_test, x_test)
-    return loss, acc, positive_bias_threshold 
-
+    positive_bias_threshold = models.confusion_matrix_model(model, y_test, x_test)
+    return loss, acc, positive_bias_threshold
 
 
 def run_lstm():
@@ -188,11 +187,12 @@ def run_lstm():
 
     if train_in_sequence:
         # Evaluate model on assigned eval set
-        lstm_loss, lstm_acc, positive_bias_threshold  = eval_model(lstm_model, x_eval, y_eval)
+        lstm_loss, lstm_acc, positive_bias_threshold = eval_model(lstm_model, x_eval, y_eval)
         # Show results
         print('Test Loss:', lstm_loss)
         print('Test Accuracy:', lstm_acc)
         print('Positive bias threshold: ', positive_bias_threshold)
+
 
 def run_gru():
     """"""
@@ -208,7 +208,7 @@ def run_gru():
         train_model(gru_model, x_train_140, y_train_140, x_test_140, y_test_140, epochs, batch_size)
 
         if not train_in_sequence:
-            gru_loss_140, gru_acc_140, positive_bias_threshold= eval_model(gru_model, x_test_140, y_test_140)
+            gru_loss_140, gru_acc_140, positive_bias_threshold = eval_model(gru_model, x_test_140, y_test_140)
 
             # Show results
             print('Test loss 140:', gru_loss_140)
@@ -220,13 +220,12 @@ def run_gru():
 
     if train_in_sequence:
         # Evaluate model on assigned eval set
-        gru_loss,  gru_acc, positive_bias_threshold = eval_model(gru_model, x_eval, y_eval)
+        gru_loss, gru_acc, positive_bias_threshold = eval_model(gru_model, x_eval, y_eval)
 
         # Show results
         print('Test Loss:', gru_loss)
         print('Test Accuracy:', gru_acc)
         print('Positive bias threshold: ', positive_bias_threshold)
-
 
 
 def run_simple():
@@ -244,10 +243,10 @@ if __name__ == "__main__":
     train_in_sequence = True  # Train model on multiple datasets, instead of resetting and training seperately
 
     # Simple Classifiers
-    simple_classifiers = True
+    simple_classifiers = False
 
     # Datasets to train model on
-    train_140 = False  # Train selected models on sentiment 140 dataset
+    train_140 = True  # Train selected models on sentiment 140 dataset
 
     # Predict covid sentiment
     predict_covid = True
@@ -280,11 +279,13 @@ if __name__ == "__main__":
     max_features = 20000  # Maximum number of features (words) to process
     maxlen = 100  # Maximum length of sequences - all sequences will be cut or padded to this length
 
+    force_covid_reload = False
+
     print("Loading corpus for vectorizer...", end="")
     if predict_covid:
 
         # Check if exists
-        if os.path.isfile(data_dir + "/covid19-tweets/dataframe.csv"):
+        if os.path.isfile(data_dir + "/covid19-tweets/dataframe.csv") and not force_covid_reload:
             covid_data = pd.read_csv(data_dir + "/covid19-tweets/dataframe.csv")
         else:
             covid_data = datasets.load_covid(num_rows=num_rows, seed=seed)
@@ -293,18 +294,21 @@ if __name__ == "__main__":
     else:
         # Load another corpus here if not predicting covid sentiment
         corpus = []
+
+    print("Loaded %d rows from covid data." % (len(corpus) - 1))
     print(" Done")
 
     # Create vectorizer
     print("Creating vectorizer...", end="")
-    vectorizer = datasets.create_vectorizer(corpus)
+    vectorizer = datasets.create_vectorizer(corpus, max_features=max_features)
     print(" Done")
 
     if train_140:
         # Sentiment 140
         print("Loading Sentiment 140...", end="")
         (x_train_140, y_train_140), \
-        (x_test_140, y_test_140) = datasets.load_sentiment_140(data_dir=data_dir,
+        (x_test_140, y_test_140) = datasets.load_sentiment_140(vectorizer=vectorizer,
+                                                               data_dir=data_dir,
                                                                num_rows=num_rows,
                                                                maxlen=maxlen,
                                                                simple_classifier=simple_classifiers,
@@ -324,6 +328,8 @@ if __name__ == "__main__":
     epochs = 1
     batch_size = 128
 
+    print(x_train_140)
+
     # Run LSTM Model
     if model_LSTM:
         run_lstm()
@@ -331,7 +337,6 @@ if __name__ == "__main__":
     # Run GRU modelling
     if model_GRU:
         run_gru()
-
 
     if simple_classifiers:
         run_simple()

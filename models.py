@@ -30,20 +30,22 @@ from sklearn.metrics import roc_curve
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.metrics import average_precision_score, recall_score
 from sklearn.metrics import f1_score
+
 os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
 
-def confusion_matrix_model(opinion_classifier, y_test_opinion, x_test_opinion, simple = False, model_name = None):
-     if simple:
+
+def confusion_matrix_model(opinion_classifier, y_test_opinion, x_test_opinion, simple=False, model_name=None):
+    if simple:
         average_precision = average_precision_score(y_test_opinion, opinion_classifier.predict(x_test_opinion))
         print('Average precision score: {0:0.2f}'.format(average_precision))
         recall = recall_score(y_test_opinion, opinion_classifier.predict(x_test_opinion), average='micro')
-        print("Recall score is: {0:0.2f}" .format(recall))
+        print("Recall score is: {0:0.2f}".format(recall))
         fscore = f1_score(y_test_opinion, opinion_classifier.predict(x_test_opinion), average='micro')
         print("F1 score is: " + str(fscore))
         disp = plot_confusion_matrix(opinion_classifier, x_test_opinion, y_test_opinion,
-                                    display_labels=['negative', 'positive'],
-                                    cmap=plt.cm.Blues,
-                                    normalize="true")
+                                     display_labels=['negative', 'positive'],
+                                     cmap=plt.cm.Blues,
+                                     normalize="true")
         title = "Normalized confusion matrix " + model_name
         disp.ax_.set_title(title)
         print("Normalized confusion matrix")
@@ -57,7 +59,7 @@ def confusion_matrix_model(opinion_classifier, y_test_opinion, x_test_opinion, s
             # skplt.metrics.plot_roc_curve(y_test_opinion, opinion_classifier.predict(x_test_opinion))
             # plt.show()
             # plt.savefig(model_name, 'roc.png')
-        y_pred = opinion_classifier.predict_proba(x_test_opinion)[::,1]
+        y_pred = opinion_classifier.predict_proba(x_test_opinion)[::, 1]
         from sklearn.metrics import roc_curve
 
         fpr, tpr, thresholds = roc_curve(y_test_opinion, y_pred)
@@ -75,9 +77,9 @@ def confusion_matrix_model(opinion_classifier, y_test_opinion, x_test_opinion, s
         plt.title('ROC curve ' + model_name)
         plt.legend(loc='best')
         plt.show()
-        
 
-     else:
+
+    else:
         from sklearn.metrics import roc_curve
         y_pred_keras = opinion_classifier.predict(x_test_opinion).ravel()
         y_pred_keras_class = opinion_classifier.predict_classes(x_test_opinion).ravel()
@@ -91,7 +93,7 @@ def confusion_matrix_model(opinion_classifier, y_test_opinion, x_test_opinion, s
         average_precision = average_precision_score(y_test_opinion, opinion_classifier.predict(x_test_opinion))
         print('Average precision score: {0:0.2f}'.format(average_precision))
         recall = recall_score(y_test_opinion, opinion_classifier.predict_classes(x_test_opinion), average='micro')
-        print("Recall score is: {0:0.2f}" .format(recall))
+        print("Recall score is: {0:0.2f}".format(recall))
         fscore = f1_score(y_test_opinion, opinion_classifier.predict_classes(x_test_opinion), average='micro')
         print("F1 score is: " + str(fscore))
         plt.figure(1)
@@ -122,7 +124,7 @@ def confusion_matrix_model(opinion_classifier, y_test_opinion, x_test_opinion, s
         plt.ylabel('True')
         plt.show()
         print(disp)
-     return positive_bias_threshold
+    return positive_bias_threshold
 
 
 def timer(start_time=None):
@@ -182,7 +184,6 @@ def ensemble_classifers(X_train_opinion, y_train_opinion, x_test_opinion, y_test
 
     scores = []
     for model_name, mp in model_params.items():
-
         print("\nStarted ", model_name)
         start_time = timer(None)
         clf = GridSearchCV(mp['model'], mp['params'], cv=5, return_train_score=False)
@@ -204,12 +205,13 @@ def ensemble_classifers(X_train_opinion, y_train_opinion, x_test_opinion, y_test
     opinion_classifier.fit(X_train_opinion, y_train_opinion)
     print(opinion_classifier.score(x_test_opinion, np.array(y_test_opinion)))
 
+
 def gru(vocab_size,
-         embedding_size=128,
-         filters=64,
-         pool_size=None,
-         kernel_size=5,
-         gru_output_size=70):
+        embedding_size=128,
+        filters=64,
+        pool_size=None,
+        kernel_size=5,
+        gru_output_size=70):
     model = Sequential()
 
     model.add(Embedding(vocab_size, embedding_size))
@@ -245,6 +247,7 @@ def gru(vocab_size,
     # print(model.summary())
 
     return model
+
 
 def lstm(vocab_size,
          embedding_size=128,
