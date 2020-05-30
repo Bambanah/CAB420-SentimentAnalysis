@@ -14,6 +14,8 @@ from wordcloud import WordCloud
 nltk.download('wordnet')
 from tensorflow.keras.preprocessing import sequence
 from sklearn.feature_extraction.text import TfidfVectorizer
+import glob
+import random
 
 
 def preprocess_text(text):
@@ -78,9 +80,9 @@ def wordCloudSentiment(x, y, pos):
     data['Sentiment'] = y
     data['Text'] = x
     if pos:
-        data_array = data[data['Sentiment'] == 0]
-    else:
         data_array = data[data['Sentiment'] == 1]
+    else:
+        data_array = data[data['Sentiment'] == 0]
     plt.figure(figsize=(20, 20))
     wc = WordCloud(max_words=1000, width=1600, height=800).generate(" ".join(np.asarray(data_array["Text"])))
     if pos:
@@ -91,40 +93,52 @@ def wordCloudSentiment(x, y, pos):
     plt.show()
 
 
-def preprocess(x_train, x_test, y_train, num_words, maxlen, simple_classifier):
+def create_vectorizer(corpus, max_features=20000, simple_classifier=False):
+    # Use keras to tokenize words
+    if simple_classifier:
+        # Create Tfidf Vectorizer
+        vectorizer = TfidfVectorizer(min_df=5, max_df=0.8, sublinear_tf=True, use_idf=True)
+
+        # Fit to corpus
+        vectorizer.fit(corpus)
+    else:
+        # Create Keras Tokenizer
+        vectorizer = preprocessing.text.Tokenizer(num_words=max_features)
+
+        # Tokenize text data
+        vectorizer.fit_on_texts(corpus)
+
+    return vectorizer
+
+
+def preprocess(vectorizer, text_arr, maxlen, simple_classifier=False):
     """
     Takes an array of text strings and outputs an array where each text is a vector of integers assigned based on word
     frequency
     """
     # Apply specialised preprocessing to each text item
-    x_train = np.array([preprocess_text(x) for x in x_train])
-    x_test = np.asarray([preprocess_text(x) for x in x_test])
-    # wordCloudSentiment(x_train, y_train, False)
-    # wordCloudSentiment(x_train, y_train, True)
+    text_arr = np.array([preprocess_text(x) for x in text_arr])
 
     # Use keras to tokenize words
     if simple_classifier:
-        vectorizer = TfidfVectorizer(min_df=5, max_df=0.8, sublinear_tf=True, use_idf=True)
-        vectorizer.fit(x_train)
-        x_train = vectorizer.transform(x_train)
-        x_test = vectorizer.transform(x_test)
+        # Vectorize text to sequences
+        text_arr = vectorizer.transform(text_arr)
     else:
-        tokenizer = preprocessing.text.Tokenizer(
-            num_words=num_words
-        )
-        # Tokenize text data
-        tokenizer.fit_on_texts(x_train)
+        # Vectorize text to sequences
+        text_arr = vectorizer.texts_to_sequences(text_arr)
 
-        x_train = tokenizer.texts_to_sequences(x_train)
-        x_test = tokenizer.texts_to_sequences(x_test)
+        # Pad sequences to equal length
+        text_arr = sequence.pad_sequences(text_arr, maxlen)
 
-        x_train = sequence.pad_sequences(x_train, maxlen)
-        x_test = sequence.pad_sequences(x_test, maxlen)
-
-    return x_train, x_test
+    return text_arr
 
 
-def load_sentiment_140(data_dir="data", num_words=None, num_rows=None, maxlen=None, test_split=0.2, seed=100,
+def load_sentiment_140(vectorizer,
+                       data_dir="data",
+                       num_rows=None,
+                       maxlen=None,
+                       test_split=0.2,
+                       seed=100,
                        simple_classifier=False):
     """Loads the Sentiment 140 dataset, with preprocessing
 
@@ -144,8 +158,8 @@ def load_sentiment_140(data_dir="data", num_words=None, num_rows=None, maxlen=No
         maxlen = 100
 
     # Load dataset from file
-    file_dir = data_dir + "/sentiment-140/training.1600000.processed.noemoticon.csv"
-    sentiment_data = pd.read_csv(file_dir,
+    file_path = data_dir + "/sentiment-140/training.1600000.processed.noemoticon.csv"
+    sentiment_data = pd.read_csv(file_path,
                                  encoding='ISO-8859-1',
                                  names=["Sentiment", "ID", "Date", "Query", "User", "Text"])
 
@@ -167,11 +181,63 @@ def load_sentiment_140(data_dir="data", num_words=None, num_rows=None, maxlen=No
     y_train[y_train == 4] = 1
     y_test[y_test == 4] = 1
 
-    # Apply text preprocessing to training text
-    x_train, x_test = preprocess(x_train, x_test, y_train, num_words, maxlen, simple_classifier=simple_classifier)
+    # Create word clouds
+    wordCloudSentiment(x_train, y_train, True)
+    wordCloudSentiment(x_train, y_train, False)
+
+    # Apply text preprocessing to training and testing text
+    x_train = preprocess(vectorizer, x_train, maxlen,
+                         simple_classifier=simple_classifier)
+
+    x_test = preprocess(vectorizer, x_test, maxlen,
+                        simple_classifier=simple_classifier)
 
     return (x_train, y_train), (x_test, y_test)
 
 
-def load_covid_twitter():
-    pass
+def load_covid(data_dir="data", num_rows=None, seed=100):
+    """
+
+    Args:
+        data_dir:
+        num_rows:
+        seed: 
+
+    Returns:
+    """
+    # Load dataset from file
+    file_dir = data_dir + "/covid19-tweets/2020-*.csv"
+    files_to_load = glob.glob(file_dir)
+    print(files_to_load)
+
+    rows_from_each = round(num_rows / len(files_to_load))
+
+    print("Loading {} rows from {} files".format(rows_from_each, len(files_to_load)))
+
+    # Load first csv as initial dataframe
+    covid_data = pd.read_csv(files_to_load[0])
+
+    for file in files_to_load[1:]:
+        print("Sampling {}".format(file))
+
+        n = sum(1 for line in open(file, encoding="utf8")) - 1  # number of records in file (excludes header)
+        skip = sorted(
+            random.sample(range(1, n + 1),
+                          n - rows_from_each))  # the 0-indexed header will not be included in the skip list
+
+        df = pd.read_csv(file, skiprows=skip)
+
+        covid_data = pd.concat([covid_data, df])
+
+    covid_data = covid_data[covid_data.lang == 'en']  # Drop rows that aren't english
+
+    # Shuffle order of rows
+    covid_data = covid_data.sample(frac=1, random_state=seed)
+
+    # Only grab num_rows rows from data
+    # How many rows of data to return. Default all
+    # if not num_rows:
+    #     num_rows = len(covid_data)
+    # covid_data = covid_data.iloc[:num_rows]
+
+    return covid_data
