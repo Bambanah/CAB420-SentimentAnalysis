@@ -193,6 +193,8 @@ def run_lstm():
         print('Test Accuracy:', lstm_acc)
         print('Positive bias threshold: ', positive_bias_threshold)
 
+    y_pred = lstm_model.predict(processed_covid)
+
 
 def run_gru():
     """"""
@@ -269,7 +271,7 @@ if __name__ == "__main__":
     # Data parameters
     data_dir = "data"
 
-    num_rows = 30000  # Number of rows to load from data
+    num_rows = 300000  # Number of rows to load from data
     seed = 69
     test_split = 0.2
 
@@ -292,7 +294,7 @@ if __name__ == "__main__":
     corpus = covid_data["text"]
     dates = covid_data["created_at"]
 
-    print("Loaded %d rows from covid data." % (len(corpus) - 1))
+    print("Loaded %d rows from covid data." % (len(corpus)))
     print(" Done")
 
     # Create vectorizer
