@@ -167,6 +167,7 @@ def eval_model(model, x_test, y_test, batch_size=None):
     return loss, acc, positive_bias_threshold 
 
 
+
 def run_lstm():
     """"""
     # Build LSTM model
@@ -187,7 +188,6 @@ def run_lstm():
             print('Test loss 140:', lstm_loss_140)
             print('Test accuracy 140:', lstm_acc_140)
             print('Positive bias threshold 140:', positive_bias_threshold)
-
             # Rebuild model
             lstm_model = build_lstm_model(num_features=max_features)
 
@@ -198,6 +198,7 @@ def run_lstm():
         print('Test Loss:', lstm_loss)
         print('Test Accuracy:', lstm_acc)
         print('Positive bias threshold: ', positive_bias_threshold)
+
 def run_gru():
     """"""
     # Build GRU model
@@ -230,6 +231,7 @@ def run_gru():
         print('Test Loss:', gru_loss)
         print('Test Accuracy:', gru_acc)
         print('Positive bias threshold: ', positive_bias_threshold)
+
 
 
 def run_simple():

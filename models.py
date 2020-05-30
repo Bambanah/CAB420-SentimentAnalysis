@@ -123,7 +123,7 @@ def confusion_matrix_model(opinion_classifier, y_test_opinion, x_test_opinion, s
         plt.show()
         print(disp)
      return positive_bias_threshold
-          
+
 
 def timer(start_time=None):
     if not start_time:
