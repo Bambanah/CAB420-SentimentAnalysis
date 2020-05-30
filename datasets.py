@@ -94,6 +94,7 @@ def wordCloudSentiment(x, y, pos):
 
 
 def create_vectorizer(corpus, max_features=20000, simple_classifier=False):
+    
     # Use keras to tokenize words
     if simple_classifier:
         # Create Tfidf Vectorizer

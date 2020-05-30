@@ -34,6 +34,20 @@ from sklearn.metrics import f1_score
 os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
 
 
+def logistic_regression_covid(x_train, y_train, x_covid, dates):
+    log_model = LogisticRegression(solver='liblinear', multi_class='auto', C=1)
+    log_model.fit(x_train, y_train)
+    covid_sentiment = log_model.predict(x_covid)
+    data_logres = pd.DataFrame()
+    data_logres['Sentiment'] = covid_sentiment
+    data_logres['Date'] = dates.to_numpy()
+    data_logres.to_csv("LogRegressionCovid.csv")
+    
+    print(data_logres)
+
+
+
+
 def confusion_matrix_model(opinion_classifier, y_test_opinion, x_test_opinion, simple=False, model_name=None):
     if simple:
         average_precision = average_precision_score(y_test_opinion, opinion_classifier.predict(x_test_opinion))
