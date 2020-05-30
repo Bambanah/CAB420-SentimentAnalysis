@@ -1,51 +1,24 @@
+import os
+from datetime import datetime
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 import tensorflow as tf
-from tensorflow.keras.models import Sequential
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import average_precision_score, recall_score
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import f1_score
+from sklearn.metrics import plot_confusion_matrix
+from sklearn.model_selection import GridSearchCV
+from tensorflow.keras.layers import Conv1D, MaxPooling1D
 from tensorflow.keras.layers import Dense, Dropout
 from tensorflow.keras.layers import Embedding
 from tensorflow.keras.layers import LSTM, GRU
-from tensorflow.keras.layers import Conv1D, MaxPooling1D
-from sklearn import svm
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import GridSearchCV
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.tree import DecisionTreeClassifier
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-# from xgboost import XGBClassifier
-from sklearn.ensemble import GradientBoostingClassifier
-from sklearn.model_selection import RandomizedSearchCV, GridSearchCV
-from sklearn.metrics import confusion_matrix
-from sklearn.metrics import accuracy_score
-from sklearn.naive_bayes import GaussianNB
-from datetime import datetime
-from sklearn.metrics import plot_confusion_matrix
-import scikitplot as skplt
+from tensorflow.keras.models import Sequential
 from tensorflow.keras.utils import plot_model
-import os
-from sklearn.metrics import roc_curve
-from sklearn.metrics import roc_curve
-
-from sklearn.metrics import classification_report, confusion_matrix
-from sklearn.metrics import average_precision_score, recall_score
-from sklearn.metrics import f1_score
 
 os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
-
-
-def logistic_regression_covid(x_train, y_train, x_covid, dates):
-    log_model = LogisticRegression(solver='liblinear', multi_class='auto', C=1)
-    log_model.fit(x_train, y_train)
-    covid_sentiment = log_model.predict(x_covid)
-    data_logres = pd.DataFrame()
-    data_logres['Sentiment'] = covid_sentiment
-    data_logres['Date'] = dates.to_numpy()
-    data_logres.to_csv("LogRegressionCovid.csv")
-    
-    print(data_logres)
-
-
 
 
 def confusion_matrix_model(opinion_classifier, y_test_opinion, x_test_opinion, simple=False, model_name=None):
