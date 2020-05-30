@@ -6,6 +6,10 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 from models import ensemble_classifers, logistic_regression_covid
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+sns.set()
 
 import models
 import datasets
@@ -164,6 +168,33 @@ def eval_model(model, x_test, y_test, batch_size=None):
     return loss, acc, positive_bias_threshold
 
 
+def plot_predictions(predictions, title="Positivity Trend"):
+    """
+
+    Args:
+        title:
+        predictions:
+
+    Returns:
+
+    """
+    data = {
+        'date': dates,
+        'sentiment': predictions
+    }
+    df = pd.DataFrame(data)
+
+    df = df.groupby(['date']).mean()
+
+    fig = plt.figure(figsize=(12, 8))
+    ax = sns.lineplot(x="date", y="sentiment", data=df.reset_index())
+    ax.set(xlabel='Date', ylabel='Positivity', title=title)
+    plt.xticks(rotation=20)
+
+    plt.savefig("figures/" + title + ".png", bbox_inches="tight")
+    plt.show()
+
+
 def run_lstm():
     """"""
     # Build LSTM model
@@ -187,15 +218,18 @@ def run_lstm():
             # Rebuild model
             lstm_model = build_lstm_model(num_features=max_features)
 
-    if train_in_sequence:
-        # Evaluate model on assigned eval set
-        lstm_loss, lstm_acc, positive_bias_threshold = eval_model(lstm_model, x_eval, y_eval)
-        # Show results
-        print('Test Loss:', lstm_loss)
-        print('Test Accuracy:', lstm_acc)
-        print('Positive bias threshold: ', positive_bias_threshold)
+    # if train_in_sequence:
+    #     # Evaluate model on assigned eval set
+    #     lstm_loss, lstm_acc, positive_bias_threshold = eval_model(lstm_model, x_eval, y_eval)
+    #     # Show results
+    #     print('Test Loss:', lstm_loss)
+    #     print('Test Accuracy:', lstm_acc)
+    #     print('Positive bias threshold: ', positive_bias_threshold)
 
     y_pred = lstm_model.predict(processed_covid)
+    y_pred = np.hstack(y_pred)
+
+    plot_predictions(y_pred, "Positivity Trend (LSTM)")
 
 
 def run_gru():
@@ -273,7 +307,7 @@ if __name__ == "__main__":
     # Data parameters
     data_dir = "data"
 
-    num_rows = 300000  # Number of rows to load from data
+    num_rows = 5000  # Number of rows to load from data
     seed = 69
     test_split = 0.2
 
@@ -294,9 +328,9 @@ if __name__ == "__main__":
         covid_data = datasets.load_covid(num_rows=num_rows, seed=seed)
         covid_data.to_csv(data_dir + "/covid19-tweets/dataframe.csv")
     corpus = covid_data["text"]
-    dates = covid_data["created_at"]
-    print(dates)
-    print("Loaded %d rows from covid data." % (len(corpus) - 1))
+    dates = pd.to_datetime(covid_data["created_at"])
+
+    print("Loaded %d rows from covid data." % (len(corpus)))
     print(" Done")
 
     # Create vectorizer
