@@ -38,12 +38,12 @@ def logistic_regression_covid(x_train, y_train, x_covid, dates):
     log_model = LogisticRegression(solver='liblinear', multi_class='auto', C=1)
     log_model.fit(x_train, y_train)
     covid_sentiment = log_model.predict(x_covid)
-    data = pd.DataFrame()
-    data['Sentiment'] = covid_sentiment
-    data['Date'] = dates
-    data = data.set_index('Date')
+    data_logres = pd.DataFrame()
+    data_logres['Sentiment'] = covid_sentiment
+    data_logres['Date'] = dates.to_numpy()
+    data_logres.to_csv("LogRegressionCovid.csv")
     
-    print(data)
+    print(data_logres)
 
 
 
