@@ -1,14 +1,13 @@
-import pandas as pd
-import numpy as np
 import re
-from sklearn.model_selection import train_test_split
-import tensorflow.keras.preprocessing as preprocessing
 
-from sklearn.feature_extraction.text import TfidfVectorizer
+import matplotlib.pyplot as plt
+import nltk
+import numpy as np
+import pandas as pd
+import tensorflow.keras.preprocessing as preprocessing
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer, SnowballStemmer
-import nltk
-import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
 from wordcloud import WordCloud
 
 nltk.download('wordnet')
@@ -22,10 +21,8 @@ def preprocess_text(text):
     wordLemm = WordNetLemmatizer()
     snowStem = SnowballStemmer("english")
     stopwordlist = set(stopwords.words('english'))
-    # TODO: Spell check
-    # Remove URLs
-    # Defining dictionary containing all emojis with their meanings.
 
+    # Defining dictionary containing all emojis with their meanings.
     emojis = {':)': 'smile', ':-)': 'smile', ';d': 'wink', ':-E': 'vampire', '>-)':
         'evilgrin', ':(': 'sad', ':-(': 'sad', ':-<': 'sad', ':P': 'raspberry',
               ':-O': 'surprised', ':-*': 'kissing', ':-@': 'shocked', ':-$': 'confused',
@@ -40,9 +37,11 @@ def preprocess_text(text):
               'O:-)': 'angel', 'O*-)': 'angel', '(:-D': 'gossip', '=^.^=': 'cat'}
     text = text.strip()
 
+    # Replace emojis with text
     for emoji in emojis.keys():
         text = text.replace(emoji, "EMOJI" + emojis[emoji])
 
+    # Remove URLs
     text = re.sub(
         r'(https?://(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+['
         r'a-zA-Z0-9]\.[^\s]{2,}|https?://(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})',
@@ -69,7 +68,7 @@ def preprocess_text(text):
                 # Lemmatizing the word.
                 word = wordLemm.lemmatize(word)
                 # Stemming the word.
-                # word = snowStem.stem(word)
+                word = snowStem.stem(word)
                 text += (word + ' ')
 
     return text
@@ -83,13 +82,23 @@ def wordCloudSentiment(x, y, pos):
         data_array = data[data['Sentiment'] == 1]
     else:
         data_array = data[data['Sentiment'] == 0]
-    plt.figure(figsize=(20, 20))
+
+    plt.figure(figsize=(16, 8))
+    plt.grid(False)
     wc = WordCloud(max_words=1000, width=1600, height=800).generate(" ".join(np.asarray(data_array["Text"])))
+    plt.imshow(wc)
+
+    # Hide axis labels
+    plt.xticks([])
+    plt.yticks([])
+
     if pos:
         plt.title("Positive")
+        plt.savefig("figures/Sentiment 140 - Positive Wordcloud.png", bbox_inches="tight")
     else:
         plt.title("Negative")
-    plt.imshow(wc)
+        plt.savefig("figures/Sentiment 140 - Negative Wordcloud.png", bbox_inches="tight")
+
     plt.show()
 
 
