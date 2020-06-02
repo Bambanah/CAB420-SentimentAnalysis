@@ -347,8 +347,8 @@ if __name__ == "__main__":
     # ----- SWITCHES -----
 
     # RNNs
-    model_LSTM = True
-    model_GRU = False
+    model_LSTM = False
+    model_GRU = True
 
     # Simple Classifiers
     simple_classifiers = False

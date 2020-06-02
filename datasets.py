@@ -20,7 +20,6 @@ import random
 def preprocess_text(text):
     wordLemm = WordNetLemmatizer()
     snowStem = SnowballStemmer("english")
-    stopwordlist = set(stopwords.words('english'))
 
     # Defining dictionary containing all emojis with their meanings.
     emojis = {':)': 'smile', ':-)': 'smile', ';d': 'wink', ':-E': 'vampire', '>-)':
@@ -57,7 +56,7 @@ def preprocess_text(text):
     text = re.sub(r'#([^\s]+)', r'\1', text)
 
     # Defining set containing all stopwords in english.
-    # stopwordlist = set(stopwords.words('english'))
+    stopwordlist = set(stopwords.words('english'))
 
     text = re.sub(r"(.)\1\1+", r"\1\1", text)
     text = re.sub("[^a-zA-Z0-9]", " ", text)
