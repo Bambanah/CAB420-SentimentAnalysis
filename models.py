@@ -233,15 +233,16 @@ def gru(vocab_size,
     return model
 
 
-def lstm(vocab_size=20000,
-         embedding_size=128,
-         filters=64,
-         pool_size=4,
-         kernel_size=5,
-         lstm_output_size=70):
+def lstm(vocab_size,
+         embedding_size,
+         input_length,
+         filters,
+         pool_size,
+         kernel_size,
+         lstm_output_size):
     model = Sequential()
 
-    model.add(Embedding(vocab_size, embedding_size))
+    model.add(Embedding(vocab_size, embedding_size, input_length=input_length))
     model.add(Dropout(0.2))
 
     model.add(Conv1D(filters,

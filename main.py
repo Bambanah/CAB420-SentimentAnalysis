@@ -22,6 +22,7 @@ from tensorflow.keras.callbacks import ReduceLROnPlateau, EarlyStopping
 
 def build_lstm_model(num_features,
                      embedding_size=None,
+                     input_length=None,
                      kernel_size=None,
                      filters=None,
                      pool_size=None,
@@ -29,6 +30,7 @@ def build_lstm_model(num_features,
     """
     Builds and compiles an LSTM model with the provided hyper-parameters
     Args:
+        input_length:
         num_features:
         embedding_size:
         kernel_size:
@@ -41,7 +43,10 @@ def build_lstm_model(num_features,
     """
     # Embedding
     if embedding_size is None:
-        embedding_size = 64
+        embedding_size = 20
+
+    if input_length is None:
+        input_length = 100
 
     # Convolution
     if kernel_size is None:
@@ -53,12 +58,13 @@ def build_lstm_model(num_features,
 
     # LSTM
     if lstm_output_size is None:
-        lstm_output_size = 70
+        lstm_output_size = 32
 
     print('Build model...')
 
     lstm_model = models.lstm(num_features,
                              embedding_size=embedding_size,
+                             input_length=input_length,
                              kernel_size=kernel_size,
                              filters=filters,
                              pool_size=pool_size,
@@ -114,10 +120,11 @@ def build_gru_model(num_features,
     return gru_model
 
 
-def train_model(model, x_train, y_train, x_test, y_test):
+def train_model(model, name, x_train, y_train, x_test, y_test):
     """
     Trains model on provided data.
     Args:
+        name:
         model: A compiled tensorflow model
         x_train: Training X data
         y_train: Training Y data
@@ -134,7 +141,7 @@ def train_model(model, x_train, y_train, x_test, y_test):
         # tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1),
         ReduceLROnPlateau(monitor='val_loss', factor=0.2,
                           patience=1, min_lr=1e-7),
-        EarlyStopping(monitor="val_loss", patience=2)
+        EarlyStopping(monitor="val_loss", patience=3)
     ]
 
     history = model.fit(x_train,
@@ -145,7 +152,7 @@ def train_model(model, x_train, y_train, x_test, y_test):
                         use_multiprocessing=True,
                         callbacks=my_callbacks)
 
-    plot_history(history)
+    plot_history(history, name)
 
 
 def eval_model(model, x_test, y_test, name=None):
@@ -210,10 +217,10 @@ def eval_model(model, x_test, y_test, name=None):
 
 def run_lstm():
     # Build model
-    lstm_model = build_lstm_model(num_features=max_features)
+    lstm_model = build_lstm_model(num_features=max_features, input_length=maxlen)
 
     # Train moel on 140 data
-    train_model(lstm_model, x_train_140, y_train_140, x_test_140, y_test_140)
+    train_model(lstm_model, "LSTM", x_train_140, y_train_140, x_test_140, y_test_140)
 
     # --- Evaluation ---
 
@@ -242,7 +249,7 @@ def run_gru():
     gru_model = build_gru_model(num_features=max_features)
 
     # Train model on sentiment 140 data
-    train_model(gru_model, x_train_140, y_train_140, x_test_140, y_test_140)
+    train_model(gru_model, "GRU", x_train_140, y_train_140, x_test_140, y_test_140)
 
     # Evaluate model on assigned eval set
     gru_loss, gru_acc = eval_model(gru_model, x_test_140, y_test_140, name="GRU")
@@ -289,50 +296,50 @@ def plot_predictions(predictions, title="Positivity Trend"):
     df = df.groupby(['date']).mean()
 
     # Plot predictions
-    plt.figure(figsize=(6, 4))
+    plt.figure(figsize=(14, 5))
     plt.grid(False)
     ax = sns.lineplot(x="date", y="sentiment", data=df.reset_index())
     ax.set(xlabel='Date', ylabel='Positivity', title=title)
-    plt.xticks(rotation=20)
+    plt.xticks(rotation=0)
 
     # Save and display figure
     plt.savefig("figures/" + title + ".png", bbox_inches="tight")
     plt.show()
 
 
-def plot_history(history):
+def plot_history(history, name):
     history = history.history
 
     # Plot loss
-    fig = plt.figure(figsize=[12, 8])
+    fig = plt.figure(figsize=[15, 3])
 
-    ax3 = fig.add_subplot(1, 2, 1)
+    ax3 = fig.add_subplot(1, 4, 1)
     ax3.set(xlabel="epochs", ylabel="Loss", title="Training Loss")
     ax3.plot(history['loss'])
     ax3.grid()
 
-    ax2 = fig.add_subplot(1, 2, 2)
+    ax2 = fig.add_subplot(1, 4, 2)
     ax2.set(xlabel="epochs", ylabel="Loss", title="Validation Loss")
     ax2.plot(history['val_loss'])
     ax2.grid()
 
-    plt.savefig('figures/RNN/Loss.png')
-    plt.show()
+    # plt.savefig('figures/RNN/Loss.png')
+    # plt.show()
 
     # Plot accuracy
-    fig = plt.figure(figsize=[12, 8])
+    # fig = plt.figure(figsize=[12, 8])
 
-    ax3 = fig.add_subplot(1, 2, 1)
+    ax3 = fig.add_subplot(1, 4, 3)
     ax3.set(xlabel="epochs", ylabel="Accuracy", title="Training Accuracy")
     ax3.plot(history['acc'])
     ax3.grid()
 
-    ax2 = fig.add_subplot(1, 2, 2)
-    ax2.set(xlabel="epochs", ylabel="Loss", title="Validation Accuracy")
+    ax2 = fig.add_subplot(1, 4, 4)
+    ax2.set(xlabel="epochs", ylabel="Accuracy", title="Validation Accuracy")
     ax2.plot(history['val_acc'])
     ax2.grid()
 
-    plt.savefig('figures/RNN/Accuracy.png')
+    plt.savefig('figures/RNN/' + name + '_Accuracy-Loss.png', bbox_inches="tight")
     plt.show()
 
 
@@ -371,7 +378,7 @@ if __name__ == "__main__":
     # Data parameters
     data_dir = "data"
 
-    num_rows = 50000  # Number of rows to load from data
+    num_rows = 100000  # Number of rows to load from data
     seed = 69
     test_split = 0.2
 
@@ -418,8 +425,8 @@ if __name__ == "__main__":
     # ----- TRAINING -----
 
     # Training parameters
-    epochs = 10
-    batch_size = 128
+    epochs = 20
+    batch_size = 64
 
     # Run LSTM Model
     if model_LSTM:
