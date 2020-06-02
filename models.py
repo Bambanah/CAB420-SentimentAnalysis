@@ -37,15 +37,14 @@ def confusion_matrix_model(opinion_classifier, y_test_opinion, x_test_opinion, s
         disp.ax_.set_title(title)
         print("Normalized confusion matrix")
         print(disp.confusion_matrix)
-        plt.show()
-        try:
-            plt.savefig(disp + 'confusion_matrix.png')
-        except:
-            pass
 
-            # skplt.metrics.plot_roc_curve(y_test_opinion, opinion_classifier.predict(x_test_opinion))
-            # plt.show()
-            # plt.savefig(model_name, 'roc.png')
+        plt.show()
+        plt.savefig('figures/Simple/confusion_matrix.png')
+
+        # skplt.metrics.plot_roc_curve(y_test_opinion, opinion_classifier.predict(x_test_opinion))
+        # plt.show()
+        # plt.savefig('figures/Simple/' + model_name + '_roc.png')
+
         y_pred = opinion_classifier.predict_proba(x_test_opinion)[::, 1]
         from sklearn.metrics import roc_curve
 
@@ -64,7 +63,6 @@ def confusion_matrix_model(opinion_classifier, y_test_opinion, x_test_opinion, s
         plt.title('ROC curve ' + model_name)
         plt.legend(loc='best')
         plt.show()
-
 
     else:
         from sklearn.metrics import roc_curve
@@ -92,7 +90,6 @@ def confusion_matrix_model(opinion_classifier, y_test_opinion, x_test_opinion, s
         plt.legend(loc='best')
         plt.show()
         disp = confusion_matrix(y_test_opinion, opinion_classifier.predict_classes(x_test_opinion))
-        print(disp)
 
         print(len(y_pred_keras))
         positive_bias_threshold = eer_threshold - 0.02
@@ -110,7 +107,7 @@ def confusion_matrix_model(opinion_classifier, y_test_opinion, x_test_opinion, s
         plt.xlabel('Predicted')
         plt.ylabel('True')
         plt.show()
-        print(disp)
+
     return positive_bias_threshold
 
 
@@ -237,14 +234,15 @@ def gru(vocab_size,
 
 
 def lstm(vocab_size,
-         embedding_size=128,
-         filters=64,
-         pool_size=None,
-         kernel_size=5,
-         lstm_output_size=70):
+         embedding_size,
+         input_length,
+         filters,
+         pool_size,
+         kernel_size,
+         lstm_output_size):
     model = Sequential()
 
-    model.add(Embedding(vocab_size, embedding_size))
+    model.add(Embedding(vocab_size, embedding_size, input_length=input_length))
     model.add(Dropout(0.2))
 
     model.add(Conv1D(filters,
@@ -265,7 +263,7 @@ def lstm(vocab_size,
 
     model.add(Dense(1, activation='sigmoid'))
 
-    opt = tf.keras.optimizers.Adam(lr=1e-3, decay=1e-5)
+    opt = tf.keras.optimizers.Adam(lr=1e-3)
 
     metrics = ['acc']
 
